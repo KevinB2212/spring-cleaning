@@ -52,6 +52,9 @@ export default function Dashboard() {
     return true;
   });
 
+  // Accusations where the current user is the accused
+  const againstMe = accusations.filter((a) => a.accusedUid === user.uid);
+
   const punished = users.filter((u) => (u.points || 0) >= 3);
 
   return (
@@ -99,6 +102,32 @@ export default function Dashboard() {
           );
         })}
       </div>
+
+      {/* Accusations against me */}
+      {againstMe.length > 0 && (
+        <>
+          <h2 className="section-title" style={{ color: '#ff4444' }}>⚠️ You've Been Accused!</h2>
+          <div className="accusations-list">
+            {againstMe.map((a) => {
+              const submitter = users.find((u) => u.id === a.submittedBy);
+              const yesVotes = a.voteCount?.yes || 0;
+              const noVotes = a.voteCount?.no || 0;
+              return (
+                <div key={a.id} className="accusation-card" style={{ borderLeft: '4px solid #ff4444' }}>
+                  {a.photoUrl && (
+                    <img src={a.photoUrl} alt="Evidence" className="accusation-thumb" />
+                  )}
+                  <div className="accusation-info">
+                    <span className="accusation-name">Reported by {submitter?.name || 'Unknown'}</span>
+                    {a.note && <span className="accusation-note">"{a.note}"</span>}
+                    <span className="accusation-note">Votes: {yesVotes} yes / {noVotes} no</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
 
       {/* Pending accusations */}
       <h2 className="section-title">Pending Accusations</h2>

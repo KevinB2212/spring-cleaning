@@ -1,16 +1,48 @@
-# React + Vite
+# Spring Cleaning
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A web app for 5 housemates to track house cleanliness through accusations, voting, and point-based punishments. Built with React + Firebase, hosted on GitHub Pages.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+### 1. Firebase Project
 
-## React Compiler
+- Create a project at [Firebase Console](https://console.firebase.google.com)
+- Enable **Authentication** (Email/Password provider)
+- Enable **Cloud Firestore**
+- Enable **Firebase Storage**
+- Copy your Firebase config into `src/firebase.js`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+### 2. Create User Accounts
 
-## Expanding the ESLint configuration
+Create 5 user accounts in Firebase Auth (Authentication > Users > Add user). Then add a matching doc in the `users` Firestore collection for each:
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```json
+{
+  "uid": "<from auth>",
+  "name": "Housemate Name",
+  "email": "their@email.com",
+  "points": 0,
+  "avatar": ""
+}
+```
+
+### 3. Deploy Firestore Rules
+
+```bash
+firebase deploy --only firestore:rules
+```
+
+### 4. Install & Run Locally
+
+```bash
+npm install
+npm run dev
+```
+
+### 5. Deploy to GitHub Pages
+
+```bash
+npm run deploy
+```
+
+Or push to `main` — the GitHub Actions workflow handles it automatically.

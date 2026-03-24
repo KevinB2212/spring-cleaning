@@ -1,0 +1,177 @@
+.dashboard {
+  min-height: 100vh;
+  background: #1a1a2e;
+  color: #eee;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
+/* Navbar */
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #16213e;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+.navbar-brand {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.navbar-links {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+.navbar-links a {
+  color: #7ec8e3;
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+.navbar-links a:hover {
+  text-decoration: underline;
+}
+.btn-link {
+  background: none;
+  border: none;
+  color: #ff6b6b;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+/* Punishment banner */
+.punishment-banner {
+  background: #ff4444;
+  color: #fff;
+  text-align: center;
+  padding: 14px 16px;
+  font-weight: 700;
+  font-size: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+.btn-done {
+  background: #fff;
+  color: #ff4444;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+.btn-done:hover {
+  background: #ffe0e0;
+}
+
+/* Section titles */
+.section-title {
+  padding: 16px 16px 8px;
+  font-size: 1rem;
+  color: #aaa;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* Leaderboard */
+.leaderboard {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 16px;
+}
+.leaderboard-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #22264b;
+  border-radius: 10px;
+  padding: 14px;
+}
+.card-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: #333;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.card-name {
+  font-weight: 600;
+  font-size: 1rem;
+}
+.card-status {
+  font-size: 0.85rem;
+}
+
+/* Accusations */
+.empty-text {
+  padding: 0 16px;
+  color: #666;
+  font-style: italic;
+}
+.accusations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 0 16px 24px;
+}
+.accusation-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #22264b;
+  border-radius: 10px;
+  padding: 12px;
+}
+.accusation-thumb {
+  width: 52px;
+  height: 52px;
+  object-fit: cover;
+  border-radius: 8px;
+  flex-shrink: 0;
+}
+.accusation-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.accusation-name {
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+.accusation-note {
+  font-size: 0.8rem;
+  color: #999;
+}
+.btn-vote {
+  background: #7ec8e3;
+  color: #1a1a2e;
+  text-decoration: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+.btn-vote:hover {
+  background: #5bb0d0;
+}

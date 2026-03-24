@@ -37,6 +37,7 @@
 html {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  scroll-behavior: smooth;
 }
 
 body {
@@ -46,6 +47,22 @@ body {
   color: var(--text);
   min-height: 100vh;
   line-height: 1.5;
+  padding-bottom: env(safe-area-inset-bottom);
+  overscroll-behavior: none;
+}
+
+/* ── iOS PWA ── */
+button, a, [role="button"] {
+  -webkit-tap-highlight-color: transparent;
+}
+
+button, [role="button"] {
+  touch-action: manipulation;
+}
+
+nav, .navbar, button, [role="button"] {
+  -webkit-user-select: none;
+  user-select: none;
 }
 
 /* ── Scrollbar ── */
@@ -85,6 +102,7 @@ body {
   justify-content: center;
   gap: 6px;
   padding: 10px 20px;
+  min-height: 44px;
   border-radius: var(--radius-md);
   border: none;
   cursor: pointer;
@@ -156,7 +174,7 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 14px 20px;
+  padding: max(14px, env(safe-area-inset-top)) 20px 14px;
   background: rgba(10, 10, 15, 0.7);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
@@ -242,7 +260,7 @@ textarea {
   border: 1px solid var(--border);
   color: var(--text);
   font-family: inherit;
-  font-size: 0.95rem;
+  font-size: 16px;
   transition: all var(--transition);
   outline: none;
 }

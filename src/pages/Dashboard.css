@@ -57,7 +57,7 @@
 .dashboard-content {
   max-width: 520px;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 16px max(24px, env(safe-area-inset-bottom));
 }
 
 /* ── Punishment Banner ── */

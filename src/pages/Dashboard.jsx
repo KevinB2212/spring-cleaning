@@ -10,6 +10,8 @@ export default function Dashboard() {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
   const [accusations, setAccusations] = useState([]);
+  const [showVoteModal, setShowVoteModal] = useState(true);
+  const [currentVoteIndex, setCurrentVoteIndex] = useState(0);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
@@ -52,12 +54,108 @@ export default function Dashboard() {
   const againstMe = accusations.filter((a) => a.accusedUid === user.uid);
   const punished = users.filter((u) => (u.points || 0) >= 3);
 
+  const currentVoteable = voteable[currentVoteIndex];
+  const voteModalVisible = showVoteModal && voteable.length > 0 && currentVoteable;
+
+  const modalOverlayStyle = {
+    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)',
+    backdropFilter: 'blur(8px)', WebkitBackdropFilter: 'blur(8px)',
+    zIndex: 1000, display: 'flex', alignItems: 'center',
+    justifyContent: 'center', padding: 20,
+  };
+  const modalCardStyle = {
+    maxWidth: 400, width: '100%', background: '#1a1a2e',
+    border: '1px solid rgba(124,58,237,0.3)', borderRadius: 20,
+    overflow: 'hidden', boxShadow: '0 0 40px rgba(124,58,237,0.2)',
+    position: 'relative',
+  };
+  const modalHeaderStyle = {
+    background: 'linear-gradient(135deg, #dc2626, #ea580c)',
+    padding: '16px 20px', display: 'flex', alignItems: 'center',
+    justifyContent: 'space-between', fontWeight: 700, fontSize: 18, color: '#fff',
+  };
+  const modalBtnStyle = (bg) => ({
+    flex: 1, padding: '14px 12px', border: 'none', borderRadius: 12,
+    fontSize: 16, fontWeight: 700, cursor: 'pointer', color: '#fff',
+    background: bg, minHeight: 44, minWidth: 44,
+  });
+  const closeStyle = {
+    position: 'absolute', top: 8, right: 8, background: 'rgba(255,255,255,0.15)',
+    border: 'none', color: '#fff', borderRadius: '50%', width: 32, height: 32,
+    fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center',
+    justifyContent: 'center', zIndex: 1,
+  };
+
   return (
     <div className="dashboard">
+      {voteModalVisible && (() => {
+        const accused = users.find((u) => u.id === currentVoteable.accusedUid);
+        const submitter = users.find((u) => u.id === currentVoteable.submittedBy);
+        return (
+          <div style={modalOverlayStyle} onClick={() => setShowVoteModal(false)}>
+            <div style={modalCardStyle} onClick={(e) => e.stopPropagation()}>
+              <button style={closeStyle} onClick={() => setShowVoteModal(false)}>✕</button>
+              <div style={modalHeaderStyle}>
+                <span>⚠️ Vote Required</span>
+                <span style={{
+                  background: 'rgba(0,0,0,0.3)', borderRadius: 20,
+                  padding: '4px 12px', fontSize: 13, fontWeight: 600,
+                }}>{currentVoteIndex + 1} of {voteable.length}</span>
+              </div>
+              {currentVoteable.photoUrl && (
+                <img
+                  src={currentVoteable.photoUrl} alt="Evidence"
+                  style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
+                />
+              )}
+              <div style={{ padding: '20px 20px 24px' }}>
+                <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
+                  {accused?.name || 'Unknown'}
+                </div>
+                <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.5)', marginBottom: 8 }}>
+                  Reported by {submitter?.name || 'Unknown'}
+                </div>
+                {currentVoteable.note && (
+                  <div style={{
+                    fontSize: 14, color: 'rgba(255,255,255,0.7)', fontStyle: 'italic',
+                    marginBottom: 16, padding: '8px 12px',
+                    background: 'rgba(255,255,255,0.05)', borderRadius: 8,
+                  }}>"{currentVoteable.note}"</div>
+                )}
+                <div style={{ display: 'flex', gap: 12, marginTop: 8 }}>
+                  <button
+                    style={modalBtnStyle('linear-gradient(135deg, #7c3aed, #6d28d9)')}
+                    onClick={() => { setShowVoteModal(false); navigate(`/vote/${currentVoteable.id}`); }}
+                  >Vote Now 🗳️</button>
+                  <button
+                    style={modalBtnStyle('rgba(255,255,255,0.1)')}
+                    onClick={() => {
+                      if (currentVoteIndex < voteable.length - 1) {
+                        setCurrentVoteIndex(currentVoteIndex + 1);
+                      } else {
+                        setShowVoteModal(false);
+                      }
+                    }}
+                  >Skip for now</button>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       <nav className="navbar">
         <span className="navbar-brand">
           <span>🧹</span>
           <span className="text-gradient">Spring Cleaning</span>
+          {voteable.length > 0 && (
+            <span style={{
+              background: '#dc2626', color: '#fff', borderRadius: '50%',
+              width: 22, height: 22, display: 'inline-flex', alignItems: 'center',
+              justifyContent: 'center', fontSize: 12, fontWeight: 700, marginLeft: 6,
+              animation: 'pulse 2s infinite',
+            }}>{voteable.length}</span>
+          )}
         </span>
         <div className="navbar-links">
           <Link to="/accuse">Accuse</Link>

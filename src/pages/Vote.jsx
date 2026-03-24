@@ -12,7 +12,6 @@ export default function Vote() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
 
-  // Real-time accusation listener
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'accusations', accusationId), (snap) => {
       if (snap.exists()) {
@@ -25,7 +24,6 @@ export default function Vote() {
     return unsub;
   }, [accusationId]);
 
-  // Load all users for name lookups
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
       const map = {};
@@ -44,7 +42,6 @@ export default function Vote() {
       const data = accSnap.data();
       const votes = { ...(data.votes || {}), [user.uid]: vote };
 
-      // Recalculate tally
       let yes = 0;
       let no = 0;
       for (const v of Object.values(votes)) {
@@ -52,7 +49,6 @@ export default function Vote() {
         else no++;
       }
 
-      // All users except accused = 4 eligible voters
       const allVotersVoted = (yes + no) >= 4;
       let newStatus = data.status;
       if (allVotersVoted) {
@@ -67,7 +63,6 @@ export default function Vote() {
 
       await updateDoc(accRef, updates);
 
-      // If confirmed, increment accused user's points
       if (newStatus === 'confirmed' && data.status !== 'confirmed') {
         await updateDoc(doc(db, 'users', data.accusedUid), {
           points: increment(1),
@@ -78,12 +73,19 @@ export default function Vote() {
     }
   };
 
-  if (loading) return <div style={s.wrapper}><p style={s.loadingText}>Loading...</p></div>;
+  if (loading) return (
+    <div style={s.wrapper}>
+      <div className="loading" />
+    </div>
+  );
+
   if (!accusation) return (
     <div style={s.wrapper}>
-      <div style={s.card}>
-        <p style={s.loadingText}>Accusation not found.</p>
-        <Link to="/dashboard" style={s.backLink}>Back to Dashboard</Link>
+      <div style={s.card} className="card fade-in">
+        <p style={s.emptyText}>Accusation not found.</p>
+        <Link to="/dashboard" className="btn btn-ghost" style={{ marginTop: '1rem' }}>
+          Back to Dashboard
+        </Link>
       </div>
     </div>
   );
@@ -92,24 +94,27 @@ export default function Vote() {
   const hasVoted = accusation.votes && accusation.votes[user.uid] !== undefined;
   const myVote = hasVoted ? accusation.votes[user.uid] : null;
   const tally = accusation.voteCount || { yes: 0, no: 0 };
-  const accusedName = users[accusation.accusedUid]?.name || 'Unknown';
+  const totalVotes = tally.yes + tally.no;
+  const yesPercent = totalVotes > 0 ? (tally.yes / totalVotes) * 100 : 50;
+  const accusedUser = users[accusation.accusedUid];
+  const accusedName = accusedUser?.name || 'Unknown';
   const submitterName = users[accusation.submittedBy]?.name || 'Unknown';
   const isResolved = accusation.status === 'confirmed' || accusation.status === 'rejected';
 
   return (
     <div style={s.wrapper}>
-      <div style={s.card}>
-        <Link to="/dashboard" style={s.backLink}>&larr; Back to Dashboard</Link>
+      <div style={s.container} className="fade-in">
+        <Link to="/dashboard" style={s.backLink}>← Back</Link>
 
         {/* Result banner */}
         {isResolved && (
           <div style={{
             ...s.banner,
-            background: accusation.status === 'confirmed' ? '#2d5a2d' : '#5a2d2d',
+            ...(accusation.status === 'confirmed' ? s.bannerConfirmed : s.bannerRejected),
           }}>
             {accusation.status === 'confirmed'
               ? '✅ Confirmed — point added!'
-              : '❌ Rejected — no point given'}
+              : '❌ Rejected — not guilty'}
           </div>
         )}
 
@@ -118,44 +123,55 @@ export default function Vote() {
           <img src={accusation.photoUrl} alt="Evidence" style={s.photo} />
         )}
 
-        {/* Details */}
-        <div style={s.details}>
-          <h2 style={s.accusedName}>{accusedName} accused</h2>
-          <p style={s.meta}>Submitted by {submitterName}</p>
-          {accusation.note && <p style={s.note}>"{accusation.note}"</p>}
+        {/* Accused person */}
+        <div style={s.accusedSection}>
+          <div className="avatar avatar-lg">
+            {accusedUser?.avatar?.startsWith('http') ? <img src={accusedUser.avatar} alt={accusedName} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : accusedName[0]}
+          </div>
+          <div>
+            <h2 style={s.accusedName}>{accusedName}</h2>
+            <p style={s.accusedLabel}>is accused</p>
+          </div>
         </div>
 
-        {/* Voting section */}
+        <p style={s.meta}>Submitted by {submitterName}</p>
+        {accusation.note && <p style={s.note}>"{accusation.note}"</p>}
+
+        {/* Vote section */}
         <div style={s.voteSection}>
           {isAccused ? (
-            <div style={s.infoBox}>
-              <p style={s.infoText}>You are accused — you cannot vote</p>
-              <Tally tally={tally} />
+            <div style={s.infoBox} className="card">
+              <p style={s.infoText}>You are the accused — you cannot vote</p>
+              <TallyBar tally={tally} yesPercent={yesPercent} />
             </div>
           ) : hasVoted || isResolved ? (
-            <div style={s.infoBox}>
+            <div style={s.infoBox} className="card">
               {hasVoted && (
                 <p style={s.infoText}>
-                  You voted: {myVote ? '✅ Yes' : '❌ No'}
+                  You voted: <span style={{ color: myVote ? '#22c55e' : '#ef4444', fontWeight: 600 }}>
+                    {myVote ? 'Yes' : 'No'}
+                  </span>
                 </p>
               )}
-              <Tally tally={tally} />
+              <TallyBar tally={tally} yesPercent={yesPercent} />
             </div>
           ) : (
             <div style={s.buttons}>
               <button
                 onClick={() => handleVote(true)}
                 disabled={voting}
-                style={{ ...s.btn, ...s.btnYes }}
+                style={s.btnYes}
               >
-                ✅ YES
+                <span style={s.voteEmoji}>✅</span>
+                YES
               </button>
               <button
                 onClick={() => handleVote(false)}
                 disabled={voting}
-                style={{ ...s.btn, ...s.btnNo }}
+                style={s.btnNo}
               >
-                ❌ NO
+                <span style={s.voteEmoji}>❌</span>
+                NO
               </button>
             </div>
           )}
@@ -165,98 +181,196 @@ export default function Vote() {
   );
 }
 
-function Tally({ tally }) {
+function TallyBar({ tally, yesPercent }) {
   return (
-    <div style={s.tally}>
-      <span style={s.tallyYes}>Yes: {tally.yes}</span>
-      <span style={s.tallyNo}>No: {tally.no}</span>
+    <div style={tb.wrapper}>
+      <div style={tb.labels}>
+        <span style={tb.yes}>Yes {tally.yes}</span>
+        <span style={tb.no}>No {tally.no}</span>
+      </div>
+      <div style={tb.track}>
+        <div style={{
+          ...tb.fillYes,
+          width: `${yesPercent}%`,
+        }} />
+        <div style={{
+          ...tb.fillNo,
+          width: `${100 - yesPercent}%`,
+        }} />
+      </div>
     </div>
   );
 }
 
+const tb = {
+  wrapper: { marginTop: '12px' },
+  labels: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    marginBottom: '8px',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+  },
+  yes: { color: '#22c55e' },
+  no: { color: '#ef4444' },
+  track: {
+    display: 'flex',
+    height: '8px',
+    borderRadius: '100px',
+    overflow: 'hidden',
+    background: 'rgba(255,255,255,0.05)',
+    gap: '2px',
+  },
+  fillYes: {
+    background: 'linear-gradient(90deg, #22c55e, #16a34a)',
+    borderRadius: '100px 0 0 100px',
+    transition: 'width 0.4s ease',
+    minWidth: '4px',
+  },
+  fillNo: {
+    background: 'linear-gradient(90deg, #dc2626, #ef4444)',
+    borderRadius: '0 100px 100px 0',
+    transition: 'width 0.4s ease',
+    minWidth: '4px',
+  },
+};
+
 const s = {
   wrapper: {
     minHeight: '100vh',
-    background: '#111',
-    padding: '1rem',
     display: 'flex',
     justifyContent: 'center',
+    padding: '1rem',
   },
-  card: {
-    background: '#1e1e1e',
-    borderRadius: '1rem',
-    padding: '1.5rem',
+  container: {
     width: '100%',
     maxWidth: '500px',
-    alignSelf: 'flex-start',
-    marginTop: '2rem',
+    marginTop: '1.5rem',
   },
-  loadingText: { color: '#888', textAlign: 'center' },
+  card: {
+    textAlign: 'center',
+    padding: '2rem',
+  },
+  emptyText: {
+    color: '#6b6b80',
+    fontSize: '0.95rem',
+    textAlign: 'center',
+  },
   backLink: {
-    color: '#4f8cff',
+    color: '#6b6b80',
     textDecoration: 'none',
     fontSize: '0.9rem',
+    fontWeight: 500,
     display: 'inline-block',
-    marginBottom: '1rem',
+    marginBottom: '1.5rem',
+    transition: 'color 0.2s ease',
   },
   banner: {
-    padding: '0.75rem 1rem',
-    borderRadius: '0.5rem',
-    color: '#fff',
+    padding: '14px 20px',
+    borderRadius: '12px',
     fontWeight: 600,
     textAlign: 'center',
     marginBottom: '1rem',
-    fontSize: '1.1rem',
+    fontSize: '0.95rem',
+  },
+  bannerConfirmed: {
+    background: 'rgba(34, 197, 94, 0.12)',
+    border: '1px solid rgba(34, 197, 94, 0.25)',
+    color: '#22c55e',
+  },
+  bannerRejected: {
+    background: 'rgba(239, 68, 68, 0.12)',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    color: '#ef4444',
   },
   photo: {
     width: '100%',
-    borderRadius: '0.75rem',
+    borderRadius: '16px',
     maxHeight: '400px',
     objectFit: 'cover',
+    display: 'block',
+    boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
   },
-  details: { marginTop: '1rem' },
+  accusedSection: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '14px',
+    marginTop: '1.25rem',
+  },
   accusedName: {
     color: '#fff',
-    margin: '0 0 0.25rem',
-    fontSize: '1.4rem',
+    margin: 0,
+    fontSize: '1.3rem',
+    fontWeight: 700,
+    letterSpacing: '-0.02em',
   },
-  meta: { color: '#888', fontSize: '0.85rem', margin: 0 },
+  accusedLabel: {
+    color: '#6b6b80',
+    margin: 0,
+    fontSize: '0.85rem',
+  },
+  meta: {
+    color: '#6b6b80',
+    fontSize: '0.85rem',
+    margin: '1rem 0 0',
+  },
   note: {
-    color: '#bbb',
+    color: '#a0a0b0',
     fontStyle: 'italic',
-    margin: '0.75rem 0 0',
-    fontSize: '0.95rem',
+    margin: '0.5rem 0 0',
+    fontSize: '0.9rem',
   },
   voteSection: { marginTop: '1.5rem' },
   infoBox: {
-    background: '#2a2a2a',
-    borderRadius: '0.5rem',
-    padding: '1rem',
     textAlign: 'center',
+    padding: '20px',
   },
-  infoText: { color: '#ccc', margin: '0 0 0.75rem', fontSize: '1rem' },
+  infoText: {
+    color: '#a0a0b0',
+    margin: 0,
+    fontSize: '0.95rem',
+  },
   buttons: {
     display: 'flex',
-    gap: '1rem',
+    gap: '12px',
   },
-  btn: {
+  btnYes: {
     flex: 1,
-    padding: '1.25rem',
-    borderRadius: '0.75rem',
-    border: 'none',
-    color: '#fff',
-    fontSize: '1.3rem',
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '20px',
+    borderRadius: '16px',
+    border: '1px solid rgba(34, 197, 94, 0.25)',
+    background: 'rgba(34, 197, 94, 0.1)',
+    color: '#22c55e',
+    fontSize: '1.1rem',
+    fontFamily: 'inherit',
     fontWeight: 700,
     cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 0 20px rgba(34, 197, 94, 0.1)',
   },
-  btnYes: { background: '#22a822' },
-  btnNo: { background: '#dd3333' },
-  tally: {
+  btnNo: {
+    flex: 1,
     display: 'flex',
-    justifyContent: 'center',
-    gap: '2rem',
-    marginTop: '0.5rem',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '6px',
+    padding: '20px',
+    borderRadius: '16px',
+    border: '1px solid rgba(239, 68, 68, 0.25)',
+    background: 'rgba(239, 68, 68, 0.1)',
+    color: '#ef4444',
+    fontSize: '1.1rem',
+    fontFamily: 'inherit',
+    fontWeight: 700,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+    boxShadow: '0 0 20px rgba(239, 68, 68, 0.1)',
   },
-  tallyYes: { color: '#44cc44', fontWeight: 600, fontSize: '1.1rem' },
-  tallyNo: { color: '#ff6666', fontWeight: 600, fontSize: '1.1rem' },
+  voteEmoji: {
+    fontSize: '1.5rem',
+  },
 };

@@ -5,12 +5,11 @@ import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 
 export default function History() {
-  useContext(AuthContext); // ensure authenticated
+  useContext(AuthContext);
   const [accusations, setAccusations] = useState([]);
   const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(true);
 
-  // Load resolved accusations
   useEffect(() => {
     const q = query(
       collection(db, 'accusations'),
@@ -29,7 +28,6 @@ export default function History() {
     return unsub;
   }, []);
 
-  // Load users for name lookups
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
       const map = {};
@@ -47,41 +45,47 @@ export default function History() {
 
   return (
     <div style={s.wrapper}>
-      <div style={s.container}>
-        <Link to="/dashboard" style={s.backLink}>&larr; Back to Dashboard</Link>
-        <h1 style={s.title}>History</h1>
+      <div style={s.container} className="fade-in">
+        <Link to="/dashboard" style={s.backLink}>← Back</Link>
+        <h1 style={s.title}>
+          <span className="text-gradient">History</span>
+        </h1>
+        <p style={s.subtitle}>Past accusations and their verdicts</p>
 
         {loading ? (
-          <p style={s.emptyText}>Loading...</p>
+          <div className="loading" />
         ) : accusations.length === 0 ? (
           <p style={s.emptyText}>No resolved accusations yet.</p>
         ) : (
           <div style={s.list}>
-            {accusations.map((a) => {
+            {accusations.map((a, i) => {
               const accused = users[a.accusedUid];
               const submitter = users[a.submittedBy];
               const tally = a.voteCount || { yes: 0, no: 0 };
               const confirmed = a.status === 'confirmed';
 
               return (
-                <div key={a.id} style={s.card}>
-                  {a.photoUrl && (
-                    <img src={a.photoUrl} alt="Evidence" style={s.thumb} />
-                  )}
-                  <div style={s.info}>
-                    <div style={s.topRow}>
-                      <span style={s.accusedName}>{accused?.name || 'Unknown'}</span>
-                      <span style={{
-                        ...s.badge,
-                        background: confirmed ? '#2d5a2d' : '#5a2d2d',
-                      }}>
-                        {confirmed ? '✅ Confirmed' : '❌ Rejected'}
-                      </span>
+                <div key={a.id}>
+                  <div style={s.card}>
+                    {a.photoUrl && (
+                      <img src={a.photoUrl} alt="Evidence" style={s.thumb} />
+                    )}
+                    <div style={s.info}>
+                      <div style={s.topRow}>
+                        <span style={s.accusedName}>{accused?.name || 'Unknown'}</span>
+                        <span
+                          className={`badge ${confirmed ? 'badge-success' : 'badge-danger'}`}
+                        >
+                          {confirmed ? 'Confirmed' : 'Rejected'}
+                        </span>
+                      </div>
+                      <p style={s.meta}>
+                        by {submitter?.name || 'Unknown'} · {formatDate(a.createdAt)}
+                      </p>
+                      <p style={s.votes}>{tally.yes}Y / {tally.no}N</p>
                     </div>
-                    <p style={s.meta}>
-                      by {submitter?.name || 'Unknown'} · {formatDate(a.createdAt)} · {tally.yes}Y / {tally.no}N
-                    </p>
                   </div>
+                  {i < accusations.length - 1 && <div style={s.divider} />}
                 </div>
               );
             })}
@@ -95,71 +99,84 @@ export default function History() {
 const s = {
   wrapper: {
     minHeight: '100vh',
-    background: '#111',
-    padding: '1rem',
     display: 'flex',
     justifyContent: 'center',
+    padding: '1rem',
   },
   container: {
     width: '100%',
-    maxWidth: '500px',
-    marginTop: '1rem',
+    maxWidth: '520px',
+    marginTop: '1.5rem',
   },
   backLink: {
-    color: '#4f8cff',
+    color: '#6b6b80',
     textDecoration: 'none',
     fontSize: '0.9rem',
+    fontWeight: 500,
+    transition: 'color 0.2s ease',
   },
   title: {
-    color: '#fff',
     fontSize: '1.5rem',
-    margin: '1rem 0',
+    fontWeight: 800,
+    letterSpacing: '-0.02em',
+    margin: '1rem 0 0',
   },
-  emptyText: { color: '#888', textAlign: 'center' },
+  subtitle: {
+    color: '#6b6b80',
+    fontSize: '0.9rem',
+    margin: '0.25rem 0 1.5rem',
+  },
+  emptyText: {
+    color: '#6b6b80',
+    textAlign: 'center',
+    padding: '2rem 0',
+    fontSize: '0.9rem',
+  },
   list: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
   },
   card: {
-    background: '#1e1e1e',
-    borderRadius: '0.75rem',
-    padding: '0.75rem',
     display: 'flex',
-    gap: '0.75rem',
+    gap: '14px',
     alignItems: 'center',
+    padding: '14px 0',
   },
   thumb: {
-    width: '56px',
-    height: '56px',
-    borderRadius: '0.5rem',
+    width: '52px',
+    height: '52px',
+    borderRadius: '10px',
     objectFit: 'cover',
     flexShrink: 0,
   },
-  info: { flex: 1, minWidth: 0 },
+  info: {
+    flex: 1,
+    minWidth: 0,
+  },
   topRow: {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    gap: '0.5rem',
-    flexWrap: 'wrap',
+    gap: '8px',
   },
   accusedName: {
-    color: '#fff',
     fontWeight: 600,
-    fontSize: '1rem',
-  },
-  badge: {
-    color: '#fff',
-    fontSize: '0.75rem',
-    fontWeight: 600,
-    padding: '0.2rem 0.5rem',
-    borderRadius: '0.25rem',
-    whiteSpace: 'nowrap',
+    fontSize: '0.95rem',
+    letterSpacing: '-0.01em',
   },
   meta: {
-    color: '#888',
+    color: '#6b6b80',
     fontSize: '0.8rem',
-    margin: '0.25rem 0 0',
+    margin: '3px 0 0',
+  },
+  votes: {
+    color: '#505068',
+    fontSize: '0.75rem',
+    margin: '2px 0 0',
+    fontWeight: 500,
+  },
+  divider: {
+    height: '1px',
+    background: 'rgba(255, 255, 255, 0.05)',
   },
 };

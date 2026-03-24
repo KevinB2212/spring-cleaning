@@ -66,168 +66,283 @@ export default function Accuse() {
     }
   }
 
+  const canSubmit = photo && accusedUid && !submitting;
+
   return (
-    <div style={styles.container}>
-      <button onClick={() => navigate('/dashboard')} style={styles.back}>
-        ← Back
-      </button>
-
-      <h1 style={styles.title}>Submit Accusation</h1>
-
-      <form onSubmit={handleSubmit} style={styles.form}>
-        {/* Photo upload */}
-        <label style={styles.label}>Photo of the mess *</label>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          capture="environment"
-          onChange={handlePhoto}
-          style={{ display: 'none' }}
-        />
-        <button
-          type="button"
-          onClick={() => fileInputRef.current.click()}
-          style={styles.uploadBtn}
-        >
-          {photo ? 'Change Photo' : 'Upload Photo'}
+    <div style={styles.wrapper}>
+      <div style={styles.container} className="fade-in">
+        <button onClick={() => navigate('/dashboard')} style={styles.back}>
+          ← Back
         </button>
-        {preview && (
-          <img src={preview} alt="Preview" style={styles.preview} />
-        )}
 
-        {/* Accused dropdown */}
-        <label style={styles.label}>Who made this mess? *</label>
-        <select
-          value={accusedUid}
-          onChange={(e) => setAccusedUid(e.target.value)}
-          style={styles.select}
-        >
-          <option value="">Select a housemate</option>
-          {users.map((u) => (
-            <option key={u.id} value={u.id}>
-              {u.avatar ? `${u.avatar} ` : ''}{u.name}
-            </option>
-          ))}
-        </select>
+        <h1 style={styles.title}>
+          <span className="text-gradient">New Accusation</span>
+        </h1>
+        <p style={styles.subtitle}>Submit photo evidence of the mess</p>
 
-        {/* Note */}
-        <label style={styles.label}>Note (optional)</label>
-        <textarea
-          value={note}
-          onChange={(e) => e.target.value.length <= 200 && setNote(e.target.value)}
-          placeholder="Describe the mess..."
-          rows={3}
-          style={styles.textarea}
-        />
-        <div style={styles.charCount}>{note.length}/200</div>
+        <form onSubmit={handleSubmit} style={styles.form}>
+          {/* Photo upload */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handlePhoto}
+            style={{ display: 'none' }}
+          />
 
-        {error && <div style={styles.error}>{error}</div>}
+          {preview ? (
+            <div style={styles.previewWrap}>
+              <img src={preview} alt="Preview" style={styles.preview} />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                style={styles.changeBtn}
+              >
+                Change photo
+              </button>
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => fileInputRef.current.click()}
+              style={styles.uploadArea}
+            >
+              <span style={styles.uploadIcon}>📸</span>
+              <span style={styles.uploadText}>Tap to upload photo</span>
+              <span style={styles.uploadHint}>Required evidence</span>
+            </button>
+          )}
 
-        <button
-          type="submit"
-          disabled={submitting || !photo || !accusedUid}
-          style={{
-            ...styles.submit,
-            opacity: submitting || !photo || !accusedUid ? 0.5 : 1,
-          }}
-        >
-          {submitting ? 'Submitting...' : 'Submit Accusation'}
-        </button>
-      </form>
+          {/* Person selector - horizontal chips */}
+          <div>
+            <label style={styles.label}>Who made this mess?</label>
+            <div style={styles.chipScroll}>
+              {users.map((u) => {
+                const selected = accusedUid === u.id;
+                return (
+                  <button
+                    key={u.id}
+                    type="button"
+                    onClick={() => setAccusedUid(u.id)}
+                    style={{
+                      ...styles.chip,
+                      ...(selected ? styles.chipSelected : {}),
+                    }}
+                  >
+                    <span style={{
+                      ...styles.chipAvatar,
+                      ...(selected ? styles.chipAvatarSelected : {}),
+                    }}>
+                      {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
+                    </span>
+                    {u.name}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Note */}
+          <div>
+            <div style={styles.labelRow}>
+              <label style={styles.label}>Note</label>
+              <span style={styles.charCount}>{note.length}/200</span>
+            </div>
+            <textarea
+              value={note}
+              onChange={(e) => e.target.value.length <= 200 && setNote(e.target.value)}
+              placeholder="Describe the mess..."
+              rows={3}
+            />
+          </div>
+
+          {error && <div style={styles.error}>{error}</div>}
+
+          <button
+            type="submit"
+            disabled={!canSubmit}
+            className="btn btn-primary"
+            style={{
+              ...styles.submitBtn,
+              opacity: canSubmit ? 1 : 0.4,
+            }}
+          >
+            {submitting ? 'Submitting...' : 'Submit Accusation'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 }
 
 const styles = {
-  container: {
+  wrapper: {
     minHeight: '100vh',
-    background: '#111',
-    color: '#eee',
+    display: 'flex',
+    justifyContent: 'center',
     padding: '1rem',
-    maxWidth: 480,
-    margin: '0 auto',
-    fontFamily: 'system-ui, sans-serif',
+  },
+  container: {
+    width: '100%',
+    maxWidth: '480px',
+    marginTop: '1.5rem',
   },
   back: {
     background: 'none',
     border: 'none',
-    color: '#aaa',
-    fontSize: '1rem',
+    color: '#6b6b80',
+    fontSize: '0.9rem',
+    fontFamily: 'inherit',
     cursor: 'pointer',
     padding: 0,
-    marginBottom: '0.5rem',
+    marginBottom: '1rem',
+    transition: 'color 0.2s ease',
   },
   title: {
     fontSize: '1.5rem',
-    marginBottom: '1.5rem',
+    fontWeight: 800,
+    letterSpacing: '-0.02em',
+    margin: 0,
+  },
+  subtitle: {
+    color: '#6b6b80',
+    fontSize: '0.9rem',
+    margin: '0.25rem 0 1.5rem',
   },
   form: {
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.75rem',
+    gap: '1.25rem',
   },
-  label: {
-    fontSize: '0.875rem',
-    color: '#aaa',
-    marginBottom: '-0.5rem',
-  },
-  uploadBtn: {
-    padding: '0.75rem',
-    background: '#222',
-    border: '2px dashed #444',
-    borderRadius: 8,
-    color: '#ccc',
-    fontSize: '1rem',
+  uploadArea: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '2.5rem 1rem',
+    background: 'rgba(255, 255, 255, 0.02)',
+    border: '2px dashed rgba(255, 255, 255, 0.1)',
+    borderRadius: '16px',
     cursor: 'pointer',
+    fontFamily: 'inherit',
+    transition: 'all 0.2s ease',
+    color: '#fff',
+  },
+  uploadIcon: {
+    fontSize: '2rem',
+  },
+  uploadText: {
+    fontSize: '0.95rem',
+    fontWeight: 600,
+  },
+  uploadHint: {
+    fontSize: '0.8rem',
+    color: '#6b6b80',
+  },
+  previewWrap: {
+    position: 'relative',
+    borderRadius: '16px',
+    overflow: 'hidden',
   },
   preview: {
     width: '100%',
-    maxHeight: 300,
+    maxHeight: '300px',
     objectFit: 'cover',
-    borderRadius: 8,
+    display: 'block',
+    borderRadius: '16px',
   },
-  select: {
-    padding: '0.75rem',
-    background: '#222',
-    border: '1px solid #333',
-    borderRadius: 8,
-    color: '#eee',
-    fontSize: '1rem',
-    appearance: 'auto',
-  },
-  textarea: {
-    padding: '0.75rem',
-    background: '#222',
-    border: '1px solid #333',
-    borderRadius: 8,
-    color: '#eee',
-    fontSize: '1rem',
-    resize: 'vertical',
+  changeBtn: {
+    position: 'absolute',
+    bottom: '12px',
+    right: '12px',
+    background: 'rgba(0, 0, 0, 0.6)',
+    backdropFilter: 'blur(10px)',
+    color: '#fff',
+    border: 'none',
+    padding: '6px 14px',
+    borderRadius: '100px',
+    fontSize: '0.8rem',
     fontFamily: 'inherit',
+    fontWeight: 500,
+    cursor: 'pointer',
+  },
+  label: {
+    fontSize: '0.8rem',
+    fontWeight: 500,
+    color: '#8b8ba0',
+    letterSpacing: '0.02em',
+    display: 'block',
+    marginBottom: '8px',
+  },
+  labelRow: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '8px',
   },
   charCount: {
     fontSize: '0.75rem',
-    color: '#666',
-    textAlign: 'right',
-    marginTop: '-0.5rem',
+    color: '#6b6b80',
+  },
+  chipScroll: {
+    display: 'flex',
+    gap: '8px',
+    overflowX: 'auto',
+    paddingBottom: '4px',
+    WebkitOverflowScrolling: 'touch',
+  },
+  chip: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    padding: '8px 14px',
+    background: 'rgba(255, 255, 255, 0.04)',
+    border: '1px solid rgba(255, 255, 255, 0.08)',
+    borderRadius: '100px',
+    color: '#a0a0b0',
+    fontSize: '0.85rem',
+    fontFamily: 'inherit',
+    fontWeight: 500,
+    cursor: 'pointer',
+    whiteSpace: 'nowrap',
+    transition: 'all 0.2s ease',
+  },
+  chipSelected: {
+    background: 'rgba(124, 58, 237, 0.15)',
+    borderColor: 'rgba(124, 58, 237, 0.4)',
+    color: '#c4b5fd',
+  },
+  chipAvatar: {
+    width: '24px',
+    height: '24px',
+    borderRadius: '50%',
+    background: 'rgba(255, 255, 255, 0.08)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    flexShrink: 0,
+  },
+  chipAvatarSelected: {
+    background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+    color: '#fff',
   },
   error: {
-    color: '#f44',
-    background: '#2a1111',
-    padding: '0.75rem',
-    borderRadius: 8,
-    fontSize: '0.875rem',
+    color: '#ef4444',
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    fontSize: '0.85rem',
+    fontWeight: 500,
   },
-  submit: {
-    padding: '1rem',
-    background: '#e53935',
-    border: 'none',
-    borderRadius: 8,
-    color: '#fff',
-    fontSize: '1.1rem',
-    fontWeight: 600,
-    cursor: 'pointer',
+  submitBtn: {
+    width: '100%',
+    padding: '16px',
+    fontSize: '1rem',
+    borderRadius: '12px',
     marginTop: '0.5rem',
   },
 };

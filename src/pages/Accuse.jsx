@@ -19,19 +19,34 @@ export default function Accuse() {
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    return () => { if (preview) URL.revokeObjectURL(preview); };
+  });
+
+  useEffect(() => {
     getDocs(collection(db, 'users')).then((snap) => {
       const list = snap.docs
         .map((d) => ({ id: d.id, ...d.data() }))
         .filter((u) => u.id !== user.uid);
       setUsers(list);
+    }).catch((err) => {
+      console.error('Failed to load users:', err);
+      setError('Failed to load housemates.');
     });
   }, [user.uid]);
+
+  const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
   function handlePhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
+    if (file.size > MAX_FILE_SIZE) {
+      setError('Photo must be under 10 MB.');
+      return;
+    }
+    if (preview) URL.revokeObjectURL(preview);
     setPhoto(file);
     setPreview(URL.createObjectURL(file));
+    setError(null);
   }
 
   async function handleSubmit(e) {

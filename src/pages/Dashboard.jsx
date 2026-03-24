@@ -31,7 +31,11 @@ export default function Dashboard() {
   }, []);
 
   const handlePunishmentDone = async (uid) => {
-    await updateDoc(doc(db, 'users', uid), { points: 0 });
+    try {
+      await updateDoc(doc(db, 'users', uid), { points: 0 });
+    } catch (err) {
+      console.error('Failed to reset punishment:', err);
+    }
   };
 
   const handleLogout = async () => {
@@ -54,7 +58,9 @@ export default function Dashboard() {
   const againstMe = accusations.filter((a) => a.accusedUid === user.uid);
   const punished = users.filter((u) => (u.points || 0) >= 3);
 
-  const currentVoteable = voteable[currentVoteIndex];
+  // Clamp index to valid range when voteable list shrinks
+  const safeIndex = voteable.length > 0 ? Math.min(currentVoteIndex, voteable.length - 1) : 0;
+  const currentVoteable = voteable[safeIndex];
   const voteModalVisible = showVoteModal && voteable.length > 0 && currentVoteable;
 
   const modalOverlayStyle = {
@@ -100,7 +106,7 @@ export default function Dashboard() {
                 <span style={{
                   background: 'rgba(0,0,0,0.3)', borderRadius: 20,
                   padding: '4px 12px', fontSize: 13, fontWeight: 600,
-                }}>{currentVoteIndex + 1} of {voteable.length}</span>
+                }}>{safeIndex + 1} of {voteable.length}</span>
               </div>
               {currentVoteable.photoUrl && (
                 <img
@@ -130,8 +136,8 @@ export default function Dashboard() {
                   <button
                     style={modalBtnStyle('rgba(255,255,255,0.1)')}
                     onClick={() => {
-                      if (currentVoteIndex < voteable.length - 1) {
-                        setCurrentVoteIndex(currentVoteIndex + 1);
+                      if (safeIndex < voteable.length - 1) {
+                        setCurrentVoteIndex(safeIndex + 1);
                       } else {
                         setShowVoteModal(false);
                       }

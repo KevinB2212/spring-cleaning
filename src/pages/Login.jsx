@@ -1,6 +1,6 @@
 import { useState, useContext } from 'react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Navigate } from 'react-router-dom';
 import { auth } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -13,8 +13,7 @@ export default function Login() {
   const navigate = useNavigate();
 
   if (user) {
-    navigate('/dashboard', { replace: true });
-    return null;
+    return <Navigate to="/dashboard" replace />;
   }
 
   const handleSubmit = async (e) => {

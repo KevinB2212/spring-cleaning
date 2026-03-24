@@ -23,6 +23,8 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (!user) return;
+    setFirestoreUser(null);
+    setLoading(true);
     const unsubDoc = onSnapshot(doc(db, 'users', user.uid), (snap) => {
       setFirestoreUser(snap.exists() ? { id: snap.id, ...snap.data() } : null);
       setLoading(false);

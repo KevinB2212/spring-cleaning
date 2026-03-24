@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, onSnapshot, updateDoc, getDoc, increment, collection } from 'firebase/firestore';
+import { doc, onSnapshot, increment, collection, runTransaction } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -11,6 +11,7 @@ export default function Vote() {
   const [users, setUsers] = useState({});
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
+  const [voteError, setVoteError] = useState(null);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'accusations', accusationId), (snap) => {
@@ -36,38 +37,55 @@ export default function Vote() {
   const handleVote = async (vote) => {
     if (voting) return;
     setVoting(true);
+    setVoteError(null);
     try {
       const accRef = doc(db, 'accusations', accusationId);
-      const accSnap = await getDoc(accRef);
-      const data = accSnap.data();
-      const votes = { ...(data.votes || {}), [user.uid]: vote };
 
-      let yes = 0;
-      let no = 0;
-      for (const v of Object.values(votes)) {
-        if (v === true) yes++;
-        else no++;
-      }
+      await runTransaction(db, async (transaction) => {
+        const accSnap = await transaction.get(accRef);
+        if (!accSnap.exists()) throw new Error('Accusation not found');
+        const data = accSnap.data();
 
-      const allVotersVoted = (yes + no) >= 4;
-      let newStatus = data.status;
-      if (allVotersVoted) {
-        newStatus = yes >= 3 ? 'confirmed' : 'rejected';
-      }
+        // Guard: accused cannot vote
+        if (data.accusedUid === user.uid) throw new Error('Accused cannot vote');
+        // Guard: already voted
+        if (data.votes?.[user.uid] !== undefined) throw new Error('Already voted');
+        // Guard: already resolved
+        if (data.status !== 'pending') throw new Error('Accusation already resolved');
 
-      const updates = {
-        [`votes.${user.uid}`]: vote,
-        voteCount: { yes, no },
-        status: newStatus,
-      };
+        const votes = { ...(data.votes || {}), [user.uid]: vote };
 
-      await updateDoc(accRef, updates);
+        let yes = 0;
+        let no = 0;
+        for (const v of Object.values(votes)) {
+          if (v === true) yes++;
+          else no++;
+        }
 
-      if (newStatus === 'confirmed' && data.status !== 'confirmed') {
-        await updateDoc(doc(db, 'users', data.accusedUid), {
-          points: increment(1),
+        // Early resolution: 3 yes = confirmed, 2 no = impossible to reach 3 yes
+        let newStatus = data.status;
+        if (yes >= 3) {
+          newStatus = 'confirmed';
+        } else if (no >= 2) {
+          newStatus = 'rejected';
+        }
+
+        transaction.update(accRef, {
+          [`votes.${user.uid}`]: vote,
+          voteCount: { yes, no },
+          status: newStatus,
         });
-      }
+
+        if (newStatus === 'confirmed' && data.status !== 'confirmed') {
+          const userRef = doc(db, 'users', data.accusedUid);
+          transaction.update(userRef, {
+            points: increment(1),
+          });
+        }
+      });
+    } catch (err) {
+      console.error('Vote failed:', err);
+      setVoteError(err.message || 'Vote failed. Please try again.');
     } finally {
       setVoting(false);
     }
@@ -138,6 +156,9 @@ export default function Vote() {
         {accusation.note && <p style={s.note}>"{accusation.note}"</p>}
 
         {/* Vote section */}
+        {voteError && (
+          <div style={s.errorBox}>{voteError}</div>
+        )}
         <div style={s.voteSection}>
           {isAccused ? (
             <div style={s.infoBox} className="card">
@@ -319,6 +340,17 @@ const s = {
     fontStyle: 'italic',
     margin: '0.5rem 0 0',
     fontSize: '0.9rem',
+  },
+  errorBox: {
+    color: '#ef4444',
+    background: 'rgba(239, 68, 68, 0.1)',
+    border: '1px solid rgba(239, 68, 68, 0.2)',
+    padding: '12px 16px',
+    borderRadius: '12px',
+    fontSize: '0.85rem',
+    fontWeight: 500,
+    marginTop: '1rem',
+    textAlign: 'center',
   },
   voteSection: { marginTop: '1.5rem' },
   infoBox: {

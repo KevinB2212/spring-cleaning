@@ -153,7 +153,7 @@ export default function Vote() {
 
         {/* Evidence photo */}
         {accusation.photoUrl && (
-          <img src={accusation.photoUrl} alt="Evidence" style={s.photo} />
+          <img src={accusation.photoUrl} alt="Evidence" loading="eager" style={s.photo} />
         )}
 
         {/* Accused person */}

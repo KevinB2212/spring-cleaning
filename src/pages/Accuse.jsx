@@ -126,7 +126,7 @@ export default function Accuse() {
 
           {preview ? (
             <div style={styles.previewWrap}>
-              <img src={preview} alt="Preview" style={styles.preview} />
+              <img src={preview} alt="Preview" loading="lazy" style={styles.preview} />
               <button
                 type="button"
                 onClick={() => fileInputRef.current.click()}
@@ -167,7 +167,7 @@ export default function Accuse() {
                       ...styles.chipAvatar,
                       ...(selected ? styles.chipAvatarSelected : {}),
                     }}>
-                      {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
+                      {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
                     </span>
                     {u.name}
                   </button>

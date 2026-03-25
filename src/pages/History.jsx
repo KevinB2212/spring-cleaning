@@ -68,7 +68,7 @@ export default function History() {
                 <div key={a.id}>
                   <div style={s.card}>
                     {a.photoUrl && (
-                      <img src={a.photoUrl} alt="Evidence" style={s.thumb} />
+                      <img src={a.photoUrl} alt="Evidence" loading="lazy" style={s.thumb} />
                     )}
                     <div style={s.info}>
                       <div style={s.topRow}>

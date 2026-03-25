@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
+import { SkeletonCard } from '../components/Skeleton';
 import './Dashboard.css';
 
 export default function Dashboard() {
@@ -112,7 +113,7 @@ export default function Dashboard() {
               </div>
               {currentVoteable.photoUrl && (
                 <img
-                  src={currentVoteable.photoUrl} alt="Evidence"
+                  src={currentVoteable.photoUrl} alt="Evidence" loading="lazy"
                   style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
                 />
               )}
@@ -185,6 +186,11 @@ export default function Dashboard() {
 
         {/* Leaderboard */}
         <h2 className="section-title">Leaderboard</h2>
+        {users.length === 0 ? (
+          <div className="leaderboard">
+            {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
+          </div>
+        ) : (
         <div className="leaderboard">
           {users.map((u, idx) => {
             const pts = u.points || 0;
@@ -210,7 +216,7 @@ export default function Dashboard() {
                   width: 48, height: 48, minWidth: 48, minHeight: 48, borderRadius: '50%',
                   overflow: 'hidden', flexShrink: 0,
                 }}>
-                  {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
+                  {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
                 </div>
                 <div className="card-info" style={{ flex: 1, minWidth: 0 }}>
                   <span className="card-name">{u.name}</span>
@@ -232,6 +238,7 @@ export default function Dashboard() {
             );
           })}
         </div>
+        )}
 
         {/* Accusation CTA */}
         <Link to="/accuse" style={{
@@ -256,7 +263,7 @@ export default function Dashboard() {
                 return (
                   <div key={a.id} className="accusation-card accused-card">
                     {a.photoUrl && (
-                      <img src={a.photoUrl} alt="Evidence" className="accusation-thumb" />
+                      <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" />
                     )}
                     <div className="accusation-info">
                       <span className="accusation-name">
@@ -285,7 +292,7 @@ export default function Dashboard() {
               return (
                 <div key={a.id} className="accusation-card">
                   {a.photoUrl && (
-                    <img src={a.photoUrl} alt="Evidence" className="accusation-thumb" />
+                    <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" />
                   )}
                   <div className="accusation-info">
                     <span className="accusation-name">

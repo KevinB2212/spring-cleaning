@@ -1,7 +1,9 @@
 import { createContext, useState, useEffect } from 'react';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { doc, onSnapshot } from 'firebase/firestore';
+import { doc, onSnapshot, setDoc } from 'firebase/firestore';
+import { getToken, onMessage } from 'firebase/messaging';
 import { auth, db } from '../firebase';
+import { messaging } from '../firebase-messaging';
 
 export const AuthContext = createContext();
 
@@ -30,6 +32,46 @@ export function AuthProvider({ children }) {
       setLoading(false);
     });
     return unsubDoc;
+  }, [user]);
+
+  // Request notification permission and save FCM token after login
+  useEffect(() => {
+    if (!user) return;
+
+    async function setupFCM() {
+      try {
+        const permission = await Notification.requestPermission();
+        if (permission !== 'granted') return;
+
+        // NOTE: Replace PLACEHOLDER_VAPID_KEY with the key from
+        // Firebase Console → Cloud Messaging → Web configuration → Generate key pair
+        const token = await getToken(messaging, {
+          vapidKey: 'PLACEHOLDER_VAPID_KEY',
+          serviceWorkerRegistration: await navigator.serviceWorker.register(
+            '/spring-cleaning/firebase-messaging-sw.js'
+          ),
+        });
+
+        if (token) {
+          await setDoc(doc(db, 'users', user.uid), { fcmToken: token }, { merge: true });
+        }
+      } catch (err) {
+        console.error('FCM setup failed:', err);
+      }
+    }
+
+    setupFCM();
+
+    // Handle foreground notifications
+    const unsubMessage = onMessage(messaging, (payload) => {
+      const { title, body } = payload.notification || {};
+      if (title) {
+        // Show a native notification even when app is in foreground
+        new Notification(title, { body, icon: '/spring-cleaning/icon-192.png' });
+      }
+    });
+
+    return unsubMessage;
   }, [user]);
 
   const logout = () => signOut(auth);

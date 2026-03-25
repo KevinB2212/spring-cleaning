@@ -34,10 +34,8 @@ export function AuthProvider({ children }) {
     return unsubDoc;
   }, [user]);
 
-  // Request notification permission and save FCM token after login
   useEffect(() => {
     if (!user) return;
-
     if (user.email === 'adminkevin@gateway.ie') return;
 
     async function setupFCM() {
@@ -45,8 +43,6 @@ export function AuthProvider({ children }) {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return;
 
-        // NOTE: Replace BDQkv5bhzgkqyd_fTualsYHqNx9-szVTLOsEPmTqPeZmhjAPkYBVRjFYCGjMjccyB6BSjZc3ehKUNs4HyFpORzw with the key from
-        // Firebase Console → Cloud Messaging → Web configuration → Generate key pair
         const token = await getToken(messaging, {
           vapidKey: 'BDQkv5bhzgkqyd_fTualsYHqNx9-szVTLOsEPmTqPeZmhjAPkYBVRjFYCGjMjccyB6BSjZc3ehKUNs4HyFpORzw',
           serviceWorkerRegistration: await navigator.serviceWorker.register(

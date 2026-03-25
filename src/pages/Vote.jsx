@@ -48,29 +48,21 @@ export default function Vote() {
         if (!accSnap.exists()) throw new Error('Accusation not found');
         const data = accSnap.data();
 
-        // Guard: accused cannot vote
         if (data.accusedUid === user.uid) throw new Error('Accused cannot vote');
-        // Guard: already voted
         if (data.votes?.[user.uid] !== undefined) throw new Error('Already voted');
-        // Guard: already resolved
         if (data.status !== 'pending') throw new Error('Accusation already resolved');
 
         const votes = { ...(data.votes || {}), [user.uid]: vote };
 
-        let yes = 0;
-        let no = 0;
+        let yes = 0, no = 0;
         for (const v of Object.values(votes)) {
           if (v === true) yes++;
           else no++;
         }
 
-        // Early resolution: 3 yes = confirmed, 2 no = impossible to reach 3 yes
         let newStatus = data.status;
-        if (yes >= 3) {
-          newStatus = 'confirmed';
-        } else if (no >= 2) {
-          newStatus = 'rejected';
-        }
+        if (yes >= 3) newStatus = 'confirmed';
+        else if (no >= 2) newStatus = 'rejected';
 
         transaction.update(accRef, {
           [`votes.${user.uid}`]: vote,

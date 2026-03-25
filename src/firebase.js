@@ -1,5 +1,3 @@
-// Firebase config — replace with your Firebase project credentials
-// Get these from: Firebase Console → Project Settings → Your apps → Web app
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';

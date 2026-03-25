@@ -4,6 +4,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import { SkeletonCard } from '../components/Skeleton';
+import ThemeToggle from '../components/ThemeToggle';
 import '../styles/Dashboard.css';
 
 export default function Dashboard() {
@@ -99,6 +100,7 @@ export default function Dashboard() {
 
   return (
     <div className="dashboard">
+      <ThemeToggle />
       {voteModalVisible && (() => {
         const accused = users.find((u) => u.id === currentVoteable.accusedUid);
         const submitter = users.find((u) => u.id === currentVoteable.submittedBy);

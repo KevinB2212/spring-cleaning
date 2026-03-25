@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { doc, onSnapshot, increment, collection, runTransaction } from 'firebase/firestore';
+import { doc, onSnapshot, increment, collection, runTransaction, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 
@@ -12,6 +12,8 @@ export default function Vote() {
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState(false);
   const [voteError, setVoteError] = useState(null);
+  const [appealText, setAppealText] = useState('');
+  const [submittingAppeal, setSubmittingAppeal] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(doc(db, 'accusations', accusationId), (snap) => {
@@ -91,6 +93,19 @@ export default function Vote() {
     }
   };
 
+  const handleAppeal = async () => {
+    if (submittingAppeal || !appealText.trim()) return;
+    setSubmittingAppeal(true);
+    try {
+      await updateDoc(doc(db, 'accusations', accusationId), { appeal: appealText.trim() });
+    } catch (err) {
+      console.error('Appeal failed:', err);
+      setVoteError(err.message || 'Failed to submit defense.');
+    } finally {
+      setSubmittingAppeal(false);
+    }
+  };
+
   if (loading) return (
     <div style={s.wrapper}>
       <div className="loading" />
@@ -164,6 +179,37 @@ export default function Vote() {
             <div style={s.infoBox} className="card">
               <p style={s.infoText}>You are the accused — you cannot vote</p>
               <TallyBar tally={tally} yesPercent={yesPercent} />
+              {accusation.status === 'pending' && (
+                accusation.appeal ? (
+                  <div style={s.appealCardGreen}>
+                    <p style={{ margin: 0, fontWeight: 600, color: '#22c55e' }}>🛡️ Your defense has been submitted</p>
+                    <p style={{ margin: '8px 0 0', color: '#a0a0b0', fontStyle: 'italic' }}>"{accusation.appeal}"</p>
+                  </div>
+                ) : (
+                  <div style={{ marginTop: '16px' }}>
+                    <textarea
+                      value={appealText}
+                      onChange={(e) => setAppealText(e.target.value.slice(0, 300))}
+                      placeholder="Tell your side of the story..."
+                      maxLength={300}
+                      style={s.appealTextarea}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+                      <span style={{ color: '#6b6b80', fontSize: '0.8rem' }}>{appealText.length}/300</span>
+                      <button
+                        onClick={handleAppeal}
+                        disabled={submittingAppeal || !appealText.trim()}
+                        style={{
+                          ...s.btnAppeal,
+                          opacity: submittingAppeal || !appealText.trim() ? 0.5 : 1,
+                        }}
+                      >
+                        Submit My Defense 🛡️
+                      </button>
+                    </div>
+                  </div>
+                )
+              )}
             </div>
           ) : hasVoted || isResolved ? (
             <div style={s.infoBox} className="card">
@@ -175,8 +221,21 @@ export default function Vote() {
                 </p>
               )}
               <TallyBar tally={tally} yesPercent={yesPercent} />
+              {accusation.appeal && (
+                <div style={s.appealCardGreen}>
+                  <p style={{ margin: 0, fontWeight: 600, color: '#22c55e' }}>🛡️ Defense from {accusedName}:</p>
+                  <p style={{ margin: '8px 0 0', color: '#a0a0b0', fontStyle: 'italic' }}>"{accusation.appeal}"</p>
+                </div>
+              )}
             </div>
           ) : (
+            <>
+            {accusation.appeal && (
+              <div style={s.appealCardGreen}>
+                <p style={{ margin: 0, fontWeight: 600, color: '#22c55e' }}>🛡️ Defense from {accusedName}:</p>
+                <p style={{ margin: '8px 0 0', color: '#a0a0b0', fontStyle: 'italic' }}>"{accusation.appeal}"</p>
+              </div>
+            )}
             <div style={s.buttons}>
               <button
                 onClick={() => handleVote(true)}
@@ -195,6 +254,7 @@ export default function Vote() {
                 NO
               </button>
             </div>
+            </>
           )}
         </div>
       </div>
@@ -404,5 +464,39 @@ const s = {
   },
   voteEmoji: {
     fontSize: '1.5rem',
+  },
+  appealTextarea: {
+    width: '100%',
+    minHeight: '80px',
+    padding: '12px',
+    borderRadius: '12px',
+    border: '1px solid rgba(255,255,255,0.1)',
+    background: 'rgba(255,255,255,0.05)',
+    color: '#fff',
+    fontFamily: 'inherit',
+    fontSize: '0.9rem',
+    resize: 'vertical',
+    outline: 'none',
+    boxSizing: 'border-box',
+  },
+  btnAppeal: {
+    padding: '10px 20px',
+    borderRadius: '12px',
+    border: '1px solid rgba(34,197,94,0.25)',
+    background: 'rgba(34,197,94,0.1)',
+    color: '#22c55e',
+    fontSize: '0.9rem',
+    fontFamily: 'inherit',
+    fontWeight: 600,
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
+  },
+  appealCardGreen: {
+    marginTop: '16px',
+    padding: '16px',
+    borderRadius: '12px',
+    background: 'rgba(34,197,94,0.1)',
+    border: '1px solid rgba(34,197,94,0.25)',
+    textAlign: 'left',
   },
 };

@@ -16,6 +16,10 @@ service cloud.firestore {
       allow read: if request.auth != null;
       allow create: if request.auth != null;
       allow update: if request.auth != null;
+      // Allow accused to update only the appeal field
+      allow update: if request.auth != null
+        && request.auth.uid == resource.data.accusedUid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["appeal"]);
       allow delete: if request.auth != null
         && resource.data.submittedBy == request.auth.uid;
     }

@@ -2,7 +2,8 @@
 
 ## Quick Links
 - 🚀 **Live App**: https://kevinb2212.github.io/spring-cleaning
-- 📖 **Setup Guide**: See `docs/SETUP.md`
+- 📖 **About Page**: https://kevinb2212.github.io/spring-cleaning/about.html
+- 📚 **Setup Guide**: See `docs/SETUP.md`
 - 🏗️ **Project Structure**: See `docs/PROJECT_STRUCTURE.md`
 - 📋 **Features & Specs**: See `docs/SPEC.md`
 

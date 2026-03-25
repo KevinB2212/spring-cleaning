@@ -36,7 +36,24 @@ export default function Accuse() {
 
   const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-  function handlePhoto(e) {
+  function compressImage(file, maxWidth = 1200, quality = 0.75) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+      };
+      img.src = url;
+    });
+  }
+
+  async function handlePhoto(e) {
     const file = e.target.files[0];
     if (!file) return;
     if (file.size > MAX_FILE_SIZE) {
@@ -44,8 +61,9 @@ export default function Accuse() {
       return;
     }
     if (preview) URL.revokeObjectURL(preview);
-    setPhoto(file);
-    setPreview(URL.createObjectURL(file));
+    const compressed = await compressImage(file);
+    setPhoto(compressed);
+    setPreview(URL.createObjectURL(compressed));
     setError(null);
   }
 

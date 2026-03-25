@@ -4,7 +4,7 @@ import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import { SkeletonCard } from '../components/Skeleton';
-import './Dashboard.css';
+import '../styles/Dashboard.css';
 
 export default function Dashboard() {
   const { user, firestoreUser, logout } = useContext(AuthContext);

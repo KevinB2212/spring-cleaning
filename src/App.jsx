@@ -7,6 +7,7 @@ const Dashboard = lazy(() => import('./pages/Dashboard'));
 const Accuse = lazy(() => import('./pages/Accuse'));
 const Vote = lazy(() => import('./pages/Vote'));
 const History = lazy(() => import('./pages/History'));
+const Admin = lazy(() => import('./pages/Admin'));
 
 function PrivateRoute({ children }) {
   const { user, loading } = useContext(AuthContext);
@@ -25,6 +26,7 @@ export default function App() {
             <Route path="/accuse" element={<PrivateRoute><Accuse /></PrivateRoute>} />
             <Route path="/vote/:accusationId" element={<PrivateRoute><Vote /></PrivateRoute>} />
             <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
+            <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Suspense>

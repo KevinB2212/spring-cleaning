@@ -43,10 +43,10 @@ export function AuthProvider({ children }) {
         const permission = await Notification.requestPermission();
         if (permission !== 'granted') return;
 
-        // NOTE: Replace PLACEHOLDER_VAPID_KEY with the key from
+        // NOTE: Replace BDQkv5bhzgkqyd_fTualsYHqNx9-szVTLOsEPmTqPeZmhjAPkYBVRjFYCGjMjccyB6BSjZc3ehKUNs4HyFpORzw with the key from
         // Firebase Console → Cloud Messaging → Web configuration → Generate key pair
         const token = await getToken(messaging, {
-          vapidKey: 'PLACEHOLDER_VAPID_KEY',
+          vapidKey: 'BDQkv5bhzgkqyd_fTualsYHqNx9-szVTLOsEPmTqPeZmhjAPkYBVRjFYCGjMjccyB6BSjZc3ehKUNs4HyFpORzw',
           serviceWorkerRegistration: await navigator.serviceWorker.register(
             '/spring-cleaning/firebase-messaging-sw.js'
           ),

@@ -2,7 +2,7 @@
   "name": "spring-cleaning-functions",
   "description": "Cloud Functions for Spring Cleaning push notifications",
   "engines": {
-    "node": "18"
+    "node": "20"
   },
   "main": "index.js",
   "dependencies": {

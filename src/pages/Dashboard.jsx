@@ -45,10 +45,11 @@ export default function Dashboard() {
 
   const getStatus = (points, punishmentsServed = 0) => {
     const punishmentDue = Math.floor(points / 3) > punishmentsServed;
-    if (punishmentDue) return { label: '🚨 PUNISHMENT DUE', variant: 'danger' };
-    if (points >= 3) return { label: '🔥 Accumulating', variant: 'warning' };
-    if (points >= 1) return { label: '⚠️ Warning', variant: 'warning' };
-    return { label: '✅ Clean', variant: 'success' };
+    if (punishmentDue) return { label: '🚨 PUNISHMENT DUE', variant: 'danger', color: '#ef4444' };
+    if (points >= 3) return { label: '🔥 Accumulating', variant: 'warning', color: '#f97316' };
+    if (points === 2) return { label: '🔥 Getting close!', variant: 'warning', color: '#f97316' };
+    if (points === 1) return { label: '⚠️ Watch it...', variant: 'caution', color: '#eab308' };
+    return { label: '✅ Clean', variant: 'success', color: '#22c55e' };
   };
 
   const voteable = accusations.filter((a) => {
@@ -215,7 +216,12 @@ export default function Dashboard() {
                 <div className="card-info" style={{ flex: 1, minWidth: 0 }}>
                   <span className="card-name">{u.name}</span>
                   <span className="card-status">
-                    <span className={`badge badge-${status.variant}`}>
+                    <span style={{
+                      background: (status.color || '#22c55e') + '22',
+                      color: status.color || '#22c55e',
+                      border: `1px solid ${status.color || '#22c55e'}44`,
+                      borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+                    }}>
                       {status.label}
                     </span>
                   </span>

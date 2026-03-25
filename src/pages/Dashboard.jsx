@@ -45,11 +45,10 @@ export default function Dashboard() {
 
   const getStatus = (points, punishmentsServed = 0) => {
     const punishmentDue = Math.floor(points / 3) > punishmentsServed;
-    if (punishmentDue) return { label: '🚨 PUNISHMENT DUE', variant: 'danger', color: '#ef4444' };
-    if (points >= 3) return { label: '🔥 Accumulating', variant: 'warning', color: '#f97316' };
-    if (points === 2) return { label: '🔥 Getting close!', variant: 'warning', color: '#f97316' };
-    if (points === 1) return { label: '⚠️ Watch it...', variant: 'caution', color: '#eab308' };
-    return { label: '✅ Clean', variant: 'success', color: '#22c55e' };
+    if (punishmentDue) return { label: '🚨 PUNISHMENT DUE', color: '#ef4444' };
+    const cycle = points % 3; // 0=green, 1=green, 2=orange
+    if (cycle === 2) return { label: '⚠️ Getting close!', color: '#f97316' };
+    return { label: points === 0 ? '✅ Clean' : '✅ All good', color: '#22c55e' };
   };
 
   const voteable = accusations.filter((a) => {

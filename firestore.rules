@@ -21,7 +21,8 @@ service cloud.firestore {
         && request.auth.uid == resource.data.accusedUid
         && request.resource.data.diff(resource.data).affectedKeys().hasOnly(["appeal"]);
       allow delete: if request.auth != null
-        && resource.data.submittedBy == request.auth.uid;
+        && (resource.data.submittedBy == request.auth.uid
+            || request.auth.token.email == 'adminkevin@gateway.ie');
     }
   }
 }

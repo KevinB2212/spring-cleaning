@@ -83,23 +83,26 @@ export default function Admin() {
   };
 
   const deleteAccusation = async (accusation) => {
-    // Delete Firestore doc
-    await deleteDoc(doc(db, 'accusations', accusation.id));
-    // Delete storage image if exists
-    if (accusation.photoUrl) {
-      try {
-        const url = new URL(accusation.photoUrl);
-        const pathMatch = url.pathname.match(/\/o\/(.+?)(\?|$)/);
-        if (pathMatch) {
-          const storagePath = decodeURIComponent(pathMatch[1]);
-          await deleteObject(ref(storage, storagePath));
+    try {
+      await deleteDoc(doc(db, 'accusations', accusation.id));
+      if (accusation.photoUrl) {
+        try {
+          const url = new URL(accusation.photoUrl);
+          const pathMatch = url.pathname.match(/\/o\/(.+?)(\?|$)/);
+          if (pathMatch) {
+            const storagePath = decodeURIComponent(pathMatch[1]);
+            await deleteObject(ref(storage, storagePath));
+          }
+        } catch (e) {
+          console.warn('Could not delete image:', e);
         }
-      } catch (e) {
-        console.warn('Could not delete image:', e);
       }
+      showToast('Accusation deleted');
+      setConfirmDelete(null);
+    } catch (e) {
+      console.error('Delete failed:', e);
+      showToast('Delete failed: ' + (e.code || e.message), '#ef4444');
     }
-    showToast('Accusation deleted');
-    setConfirmDelete(null);
   };
 
   const handleLogout = async () => {

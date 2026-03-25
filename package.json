@@ -1,7 +1,26 @@
 {
   "name": "spring-cleaning",
-  "private": true,
-  "version": "0.0.0",
+  "version": "1.5.0",
+  "description": "Democratic house cleaning accountability app. Post photos, vote on violations, track points. Real-world solution for housemate accountability with proof-based voting.",
+  "homepage": "https://kevinb2212.github.io/spring-cleaning",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/KevinB2212/spring-cleaning.git"
+  },
+  "author": "Kevin Biju",
+  "license": "MIT",
+  "keywords": [
+    "house-cleaning",
+    "voting",
+    "accountability",
+    "roommate",
+    "housemate",
+    "chores",
+    "firebase",
+    "react",
+    "pwa"
+  ],
+  "private": false,
   "type": "module",
   "scripts": {
     "dev": "vite",

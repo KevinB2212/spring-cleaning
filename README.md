@@ -15,8 +15,6 @@
 
 <p align="center">
   <a href="https://kevinb2212.github.io/spring-cleaning"><strong>🚀 Use it now →</strong></a>
-  &nbsp;&nbsp;|&nbsp;&nbsp;
-  <a href="https://kevinb2212.github.io/spring-cleaning/about.html"><strong>📖 Learn more →</strong></a>
 </p>
 
 ---

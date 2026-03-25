@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
+import ImageModal from '../components/ImageModal';
 
 export default function History() {
   useContext(AuthContext);
@@ -68,7 +69,9 @@ export default function History() {
                 <div key={a.id}>
                   <div style={s.card}>
                     {a.photoUrl && (
-                      <img src={a.photoUrl} alt="Evidence" loading="lazy" style={s.thumb} />
+                      <ImageModal src={a.photoUrl} alt="Evidence">
+                        <img src={a.photoUrl} alt="Evidence" loading="lazy" style={s.thumb} />
+                      </ImageModal>
                     )}
                     <div style={s.info}>
                       <div style={s.topRow}>

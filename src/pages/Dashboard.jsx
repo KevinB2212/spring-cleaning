@@ -5,6 +5,7 @@ import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import { SkeletonCard } from '../components/Skeleton';
 import ThemeToggle from '../components/ThemeToggle';
+import ImageModal from '../components/ImageModal';
 import '../styles/Dashboard.css';
 
 export default function Dashboard() {
@@ -116,10 +117,12 @@ export default function Dashboard() {
                 }}>{safeIndex + 1} of {voteable.length}</span>
               </div>
               {currentVoteable.photoUrl && (
-                <img
-                  src={currentVoteable.photoUrl} alt="Evidence" loading="lazy"
-                  style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block' }}
-                />
+                <ImageModal src={currentVoteable.photoUrl} alt="Evidence">
+                  <img
+                    src={currentVoteable.photoUrl} alt="Evidence" loading="lazy"
+                    style={{ width: '100%', maxHeight: 240, objectFit: 'cover', display: 'block', cursor: 'pointer' }}
+                  />
+                </ImageModal>
               )}
               <div style={{ padding: '20px 20px 24px' }}>
                 <div style={{ fontSize: 22, fontWeight: 800, color: '#fff', marginBottom: 4 }}>
@@ -267,7 +270,9 @@ export default function Dashboard() {
                 return (
                   <div key={a.id} className="accusation-card accused-card">
                     {a.photoUrl && (
-                      <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" />
+                      <ImageModal src={a.photoUrl} alt="Evidence">
+                        <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" style={{ cursor: 'pointer' }} />
+                      </ImageModal>
                     )}
                     <div className="accusation-info">
                       <span className="accusation-name">
@@ -303,7 +308,9 @@ export default function Dashboard() {
               return (
                 <div key={a.id} className="accusation-card">
                   {a.photoUrl && (
-                    <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" />
+                    <ImageModal src={a.photoUrl} alt="Evidence">
+                      <img src={a.photoUrl} alt="Evidence" loading="lazy" className="accusation-thumb" style={{ cursor: 'pointer' }} />
+                    </ImageModal>
                   )}
                   <div className="accusation-info">
                     <span className="accusation-name">

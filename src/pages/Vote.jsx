@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { doc, onSnapshot, increment, collection, runTransaction, updateDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
+import ImageModal from '../components/ImageModal';
 
 export default function Vote() {
   const { accusationId } = useParams();
@@ -143,9 +144,10 @@ export default function Vote() {
           </div>
         )}
 
-        {/* Evidence photo */}
         {accusation.photoUrl && (
-          <img src={accusation.photoUrl} alt="Evidence" loading="eager" style={s.photo} />
+          <ImageModal src={accusation.photoUrl} alt="Evidence">
+            <img src={accusation.photoUrl} alt="Evidence" loading="eager" style={{...s.photo, cursor: 'pointer'}} />
+          </ImageModal>
         )}
 
         {/* Accused person */}

@@ -26,7 +26,7 @@ export default function App() {
             <Route path="/accuse" element={<PrivateRoute><Accuse /></PrivateRoute>} />
             <Route path="/vote/:accusationId" element={<PrivateRoute><Vote /></PrivateRoute>} />
             <Route path="/history" element={<PrivateRoute><History /></PrivateRoute>} />
-            <Route path="/admin" element={<PrivateRoute><Admin /></PrivateRoute>} />
+            <Route path="/admin" element={<Admin />} />
             <Route path="*" element={<Navigate to="/dashboard" />} />
           </Routes>
         </Suspense>

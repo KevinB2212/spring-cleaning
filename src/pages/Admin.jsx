@@ -1,27 +1,51 @@
-import { useContext, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { signInWithEmailAndPassword, signOut } from 'firebase/auth';
 import {
   collection, onSnapshot, doc, updateDoc, deleteDoc, increment,
 } from 'firebase/firestore';
 import { ref, deleteObject } from 'firebase/storage';
-import { db, storage } from '../firebase';
-import { AuthContext } from '../contexts/AuthContext';
+import { auth, db, storage } from '../firebase';
 
 const ADMIN_EMAIL = 'adminkevin@gateway.ie';
 
 export default function Admin() {
-  const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const [adminUser, setAdminUser] = useState(null);
+  const [loginEmail, setLoginEmail] = useState('');
+  const [loginPassword, setLoginPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [users, setUsers] = useState([]);
   const [accusations, setAccusations] = useState([]);
   const [toast, setToast] = useState(null);
-  const [confirmDelete, setConfirmDelete] = useState(null); // accusation id to confirm
+  const [confirmDelete, setConfirmDelete] = useState(null);
 
-  // Redirect if not admin
+  // Listen for admin auth state
   useEffect(() => {
-    if (user === null) navigate('/login');
-    else if (user && user.email !== ADMIN_EMAIL) navigate('/dashboard');
-  }, [user, navigate]);
+    const unsub = auth.onAuthStateChanged((u) => {
+      if (u && u.email === ADMIN_EMAIL) setAdminUser(u);
+      else setAdminUser(null);
+    });
+    return unsub;
+  }, []);
+
+  const handleAdminLogin = async (e) => {
+    e.preventDefault();
+    setLoginError('');
+    setSubmitting(true);
+    try {
+      const cred = await signInWithEmailAndPassword(auth, loginEmail, loginPassword);
+      if (cred.user.email !== ADMIN_EMAIL) {
+        await signOut(auth);
+        setLoginError('Not authorised.');
+      }
+    } catch (err) {
+      setLoginError('Invalid credentials.');
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
@@ -79,8 +103,8 @@ export default function Admin() {
   };
 
   const handleLogout = async () => {
-    await logout();
-    navigate('/login');
+    await signOut(auth);
+    navigate('/dashboard');
   };
 
   const getUserName = (uid) => users.find((u) => u.id === uid)?.name || 'Unknown';
@@ -91,7 +115,45 @@ export default function Admin() {
     return { label: pts === 0 ? '✅ Clean' : '✅ All good', color: '#22c55e' };
   };
 
-  if (!user || user.email !== ADMIN_EMAIL) return null;
+  // Show admin login form if not authenticated as admin
+  if (!adminUser) {
+    return (
+      <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24, background: '#0d0d1a', position: 'relative', overflow: 'hidden' }}>
+        <div style={s.glow1} />
+        <div style={s.glow2} />
+        <div style={{ ...s.modal, position: 'relative', zIndex: 1, padding: '2.5rem 2rem', maxWidth: 380, width: '100%' }} className="fade-in">
+          <div style={{ textAlign: 'center', marginBottom: 28 }}>
+            <span style={{ fontSize: 40 }}>🛡️</span>
+            <h2 style={{ margin: '12px 0 4px', fontSize: 22, fontWeight: 800, color: '#fff' }}>
+              <span className="text-gradient">Admin Login</span>
+            </h2>
+            <p style={{ color: '#555', fontSize: 13 }}>Restricted access only</p>
+          </div>
+          <form onSubmit={handleAdminLogin} style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, color: '#888', fontWeight: 500 }}>Email</label>
+              <input type="email" value={loginEmail} onChange={(e) => setLoginEmail(e.target.value)} placeholder="admin@gateway.ie" required autoComplete="email" />
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <label style={{ fontSize: 12, color: '#888', fontWeight: 500 }}>Password</label>
+              <input type="password" value={loginPassword} onChange={(e) => setLoginPassword(e.target.value)} placeholder="••••••" required autoComplete="current-password" />
+            </div>
+            {loginError && (
+              <div style={{ color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', padding: '10px 14px', borderRadius: 10, fontSize: 13, fontWeight: 500 }}>
+                {loginError}
+              </div>
+            )}
+            <button type="submit" disabled={submitting} className="btn btn-primary" style={{ width: '100%', padding: 14, borderRadius: 12, marginTop: 4 }}>
+              {submitting ? 'Signing in…' : 'Sign In'}
+            </button>
+            <button type="button" onClick={() => navigate('/dashboard')} style={{ background: 'none', border: 'none', color: '#444', fontSize: 13, cursor: 'pointer', marginTop: 4 }}>
+              ← Back to app
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={s.page}>

@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, doc, updateDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import './Dashboard.css';
@@ -32,9 +32,9 @@ export default function Dashboard() {
 
   const handlePunishmentDone = async (uid) => {
     try {
-      await updateDoc(doc(db, 'users', uid), { points: 0 });
+      await updateDoc(doc(db, 'users', uid), { punishmentsServed: increment(1) });
     } catch (err) {
-      console.error('Failed to reset punishment:', err);
+      console.error('Failed to mark punishment served:', err);
     }
   };
 
@@ -43,10 +43,12 @@ export default function Dashboard() {
     navigate('/login');
   };
 
-  const getStatus = (points) => {
-    if (points >= 3) return { label: 'PUNISHMENT', variant: 'danger' };
-    if (points === 2) return { label: 'Getting messy', variant: 'warning' };
-    return { label: 'Clean', variant: 'success' };
+  const getStatus = (points, punishmentsServed = 0) => {
+    const punishmentDue = Math.floor(points / 3) > punishmentsServed;
+    if (punishmentDue) return { label: '🚨 PUNISHMENT DUE', variant: 'danger' };
+    if (points >= 3) return { label: '🔥 Accumulating', variant: 'warning' };
+    if (points >= 1) return { label: '⚠️ Warning', variant: 'warning' };
+    return { label: '✅ Clean', variant: 'success' };
   };
 
   const voteable = accusations.filter((a) => {
@@ -56,7 +58,7 @@ export default function Dashboard() {
   });
 
   const againstMe = accusations.filter((a) => a.accusedUid === user.uid);
-  const punished = users.filter((u) => (u.points || 0) >= 3);
+  const punished = users.filter((u) => Math.floor((u.points || 0) / 3) > (u.punishmentsServed || 0));
 
   // Clamp index to valid range when voteable list shrinks
   const safeIndex = voteable.length > 0 ? Math.min(currentVoteIndex, voteable.length - 1) : 0;
@@ -186,7 +188,7 @@ export default function Dashboard() {
         <div className="leaderboard">
           {users.map((u, idx) => {
             const pts = u.points || 0;
-            const status = getStatus(pts);
+            const status = getStatus(pts, u.punishmentsServed || 0);
             const rank = idx + 1;
             const rankColors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
             const rankBg = rankColors[rank] || 'rgba(255,255,255,0.1)';

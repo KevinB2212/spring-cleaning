@@ -7,9 +7,9 @@ service cloud.firestore {
       allow read: if request.auth != null;
       // Own profile: full write access
       allow write: if request.auth != null && request.auth.uid == userId;
-      // Any authenticated user can update points (for voting system + punishment reset)
+      // Any authenticated user can update points/punishmentsServed (voting + punishment)
       allow update: if request.auth != null
-        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points']);
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['points', 'punishmentsServed']);
     }
 
     match /accusations/{accusationId} {

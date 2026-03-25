@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <title>About Spring Cleaning</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+            padding: 2rem 0;
+            border-bottom: 1px solid rgba(255, 107, 107, 0.2);
+        }
+
+        h1 {
+            font-size: 3.5rem;
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8a80 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: #a0a0a0;
+            margin-bottom: 1rem;
+        }
+
+        .version-badge {
+            display: inline-block;
+            background: rgba(255, 107, 107, 0.15);
+            border: 1px solid rgba(255, 107, 107, 0.3);
+            color: #ff8a80;
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            margin-top: 1rem;
+        }
+
+        section {
+            margin-bottom: 3rem;
+            padding: 2rem;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1px solid rgba(255, 107, 107, 0.1);
+            border-radius: 12px;
+        }
+
+        h2 {
+            font-size: 2rem;
+            color: #ff8a80;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1.3rem;
+            color: #ffb3b0;
+            margin-top: 1.5rem;
+            margin-bottom: 0.8rem;
+        }
+
+        p {
+            color: #c0c0c0;
+            margin-bottom: 1rem;
+            line-height: 1.8;
+        }
+
+        ul, ol {
+            margin-left: 1.5rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            color: #c0c0c0;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .feature-card {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 1.5rem;
+            border-radius: 8px;
+            border-left: 3px solid #ff8a80;
+        }
+
+        .feature-card h4 {
+            color: #ff8a80;
+            margin-bottom: 0.5rem;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #a0a0a0;
+        }
+
+        .story-highlight {
+            background: rgba(255, 107, 107, 0.1);
+            border-left: 4px solid #ff8a80;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 6px;
+        }
+
+        .story-highlight strong {
+            color: #ff8a80;
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .stat {
+            text-align: center;
+            padding: 1rem;
+            background: rgba(255, 107, 107, 0.1);
+            border-radius: 8px;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 700;
+            color: #ff8a80;
+        }
+
+        .stat-label {
+            color: #a0a0a0;
+            font-size: 0.9rem;
+            margin-top: 0.5rem;
+        }
+
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .tech {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid rgba(255, 107, 107, 0.2);
+            color: #c0c0c0;
+            font-size: 0.9rem;
+        }
+
+        .cta {
+            display: flex;
+            gap: 1rem;
+            margin-top: 2rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            display: inline-block;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8a80 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 107, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 107, 107, 0.2);
+            color: #ff8a80;
+            border: 1px solid #ff8a80;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 107, 107, 0.3);
+        }
+
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #707070;
+            border-top: 1px solid rgba(255, 107, 107, 0.1);
+            margin-top: 3rem;
+        }
+
+        .emoji {
+            font-size: 1.2em;
+            vertical-align: -0.2em;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 1rem;
+            }
+
+            h1 {
+                font-size: 2.5rem;
+            }
+
+            h2 {
+                font-size: 1.5rem;
+            }
+
+            section {
+                padding: 1.5rem;
+            }
+
+            .feature-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .stats {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1><span class="emoji">🧹</span> Spring Cleaning</h1>
+            <p class="subtitle">Democratic house accountability, powered by photos & votes</p>
+            <div class="version-badge">v1.5.0 • 100% Daily Active • Real-World Solution</div>
+        </header>
+
+        <!-- The Problem Section -->
+        <section>
+            <h2><span class="emoji">⚠️</span> The Problem</h2>
+            <p>Five housemates. One increasingly dirty house. The old system?</p>
+            <ul>
+                <li><strong>❌ Messy:</strong> Accusations scribbled on a whiteboard</li>
+                <li><strong>❌ Inaccurate:</strong> People disagreed on what counted as "dirty"</li>
+                <li><strong>❌ Subjective:</strong> No proof, just arguments</li>
+                <li><strong>❌ Unfair:</strong> Same person always blamed</li>
+                <li><strong>❌ Untrustworthy:</strong> Tallies were erased and "disputed"</li>
+            </ul>
+            <p style="margin-top: 1.5rem;">Result: Arguments, resentment, and a house that got progressively worse.</p>
+        </section>
+
+        <!-- The Solution Section -->
+        <section>
+            <h2><span class="emoji">💡</span> The Solution</h2>
+            <p>Spring Cleaning replaces subjective arguments with <strong>objective democracy</strong>.</p>
+
+            <div class="story-highlight">
+                <strong>🎯 How it works:</strong><br>
+                1. Post a photo of the problem area<br>
+                2. 4 housemates vote (Guilty or Not Guilty)<br>
+                3. Majority wins (3+ votes = guilty)<br>
+                4. Points accumulate (3 points = punishment)<br>
+                5. Real-time leaderboard shows who's behind
+            </div>
+
+            <h3>Why It Works</h3>
+            <p><strong>Photo proof</strong> removes subjectivity. Nobody can argue "I didn't see it" or "it wasn't that bad" when there's evidence.</p>
+            <p><strong>Democratic voting</strong> ensures fairness. You need 3/4 votes, so one person's vendetta doesn't stick.</p>
+            <p><strong>Real-time accountability</strong> changes behavior. Everyone sees the leaderboard. It matters.</p>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">5</div>
+                    <div class="stat-label">Housemates</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">100%</div>
+                    <div class="stat-label">Daily Active</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">0</div>
+                    <div class="stat-label">Arguments</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">📈</div>
+                    <div class="stat-label">Cleaner House</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section>
+            <h2><span class="emoji">✨</span> Features</h2>
+
+            <h3>📸 Post Accusations with Photo Proof</h3>
+            <p>Upload a photo, describe the issue, timestamp it. No vague complaints.</p>
+
+            <h3>🗳️ Democratic Voting</h3>
+            <p>Other 4 housemates vote. Need 3+ to convict. Can't vote on your own case (fairness rules).</p>
+
+            <h3>🛡️ Appeal System</h3>
+            <p>Accused? Submit a written defense before voting closes. Your housemates can reconsider.</p>
+
+            <h3>📊 Real-Time Leaderboard</h3>
+            <p>Live points tracker. See who has the most violations. Streaks for clean periods.</p>
+
+            <h3>📱 Mobile-First PWA</h3>
+            <p>Install on your phone. Works offline. Push notifications for votes & verdicts.</p>
+
+            <h3>🔐 Secure & Private</h3>
+            <p>Firebase Auth. Each housemate has their own login. Photos stored privately.</p>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h4>⏰ Auto-Timestamped</h4>
+                    <p>Every accusation is timestamped (UTC). Impossible to dispute when it happened.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🗳️ Vote Audit Trail</h4>
+                    <p>See who voted for what (transparent). No hidden votes changing outcomes.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>📈 History & Stats</h4>
+                    <p>Browse all past accusations, appeals, and verdicts. Data never disappears.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🎮 Gamification</h4>
+                    <p>Streaks for clean periods. Achievements for staying guilt-free. Make it fun.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>🌙 Dark Mode</h4>
+                    <p>Sleek dark UI. Easy on the eyes. Looks professional, not like a homework project.</p>
+                </div>
+                <div class="feature-card">
+                    <h4>⚡ Real-Time Updates</h4>
+                    <p>Everyone sees votes & results instantly. No waiting, no delays.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Impact Section -->
+        <section>
+            <h2><span class="emoji">📊</span> Real-World Impact</h2>
+            <p>Spring Cleaning has been used by Kevin and 4 housemates since March 2026. The results speak for themselves:</p>
+
+            <div class="stats">
+                <div class="stat">
+                    <div class="stat-number">✅</div>
+                    <div class="stat-label">House is Clean</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">✅</div>
+                    <div class="stat-label">No Arguments</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">✅</div>
+                    <div class="stat-label">Proof-Based</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">✅</div>
+                    <div class="stat-label">Fair System</div>
+                </div>
+            </div>
+
+            <p style="margin-top: 1.5rem;"><strong>Key takeaway:</strong> Accountability works. When everyone knows they might be called out (with photo proof), behavior changes. When voting is fair and transparent, nobody complains.</p>
+        </section>
+
+        <!-- Tech Stack Section -->
+        <section>
+            <h2><span class="emoji">🛠️</span> Built With</h2>
+            <p>Spring Cleaning is built on modern, production-grade technology:</p>
+
+            <div class="tech-stack">
+                <div class="tech">React 18</div>
+                <div class="tech">Firebase Auth</div>
+                <div class="tech">Firestore</div>
+                <div class="tech">Cloud Storage</div>
+                <div class="tech">Vite</div>
+                <div class="tech">React Router</div>
+                <div class="tech">PWA</div>
+                <div class="tech">GitHub Pages</div>
+            </div>
+
+            <p style="margin-top: 1.5rem; color: #a0a0a0;"><em>No unnecessary frameworks, no bloat. Just what's needed to make voting fast, fair, and reliable.</em></p>
+        </section>
+
+        <!-- Creator Section -->
+        <section>
+            <h2><span class="emoji">👤</span> Created By</h2>
+            <p><strong>Kevin Biju</strong> (KevinB2212)</p>
+            <p>CS student at DCU. Built Spring Cleaning as a real-world solution to solve actual housemate problems. Now used daily by 5 people with zero arguments.</p>
+            <p style="margin-top: 1.5rem; color: #a0a0a0;"><em>"A tidy house is a tidy mind. Democracy keeps it that way."</em></p>
+        </section>
+
+        <!-- CTA Section -->
+        <section style="text-align: center; background: rgba(255, 107, 107, 0.08); border-color: rgba(255, 107, 107, 0.2);">
+            <h2><span class="emoji">🚀</span> Ready to Get Started?</h2>
+            <p>Stop arguing about chores. Start voting on proof.</p>
+            <div class="cta">
+                <a href="https://kevinb2212.github.io/spring-cleaning" class="btn btn-primary">Use Spring Cleaning</a>
+                <a href="https://github.com/KevinB2212/spring-cleaning" class="btn btn-secondary">View on GitHub</a>
+            </div>
+        </section>
+    </div>
+
+    <footer>
+        <p>Spring Cleaning v1.5.0 • MIT License • <a href="https://github.com/KevinB2212/spring-cleaning" style="color: #ff8a80; text-decoration: none;">GitHub</a></p>
+        <p style="margin-top: 0.5rem; color: #505050;">Built with ❤️ to solve real problems</p>
+    </footer>
+</body>
+</html>

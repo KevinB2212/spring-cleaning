@@ -274,6 +274,13 @@ export default function Dashboard() {
                         Votes: {yesVotes} yes / {noVotes} no
                       </span>
                     </div>
+                    <Link to={`/vote/${a.id}`} style={{
+                      display:'block', textAlign:'center', marginTop:8,
+                      background:'linear-gradient(135deg,#22c55e,#16a34a)',
+                      color:'white', borderRadius:10, padding:'10px 16px',
+                      textDecoration:'none', fontWeight:700, fontSize:14,
+                      flexShrink:0
+                    }}>🛡️ {a.appeal ? 'View Appeal' : 'Submit Appeal'}</Link>
                   </div>
                 );
               })}

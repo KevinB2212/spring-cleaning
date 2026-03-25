@@ -38,6 +38,8 @@ export function AuthProvider({ children }) {
   useEffect(() => {
     if (!user) return;
 
+    if (user.email === 'adminkevin@gateway.ie') return;
+
     async function setupFCM() {
       try {
         const permission = await Notification.requestPermission();

@@ -16,7 +16,9 @@ export default function Dashboard() {
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      const list = snap.docs
+        .map((d) => ({ id: d.id, ...d.data() }))
+        .filter((u) => u.name);
       list.sort((a, b) => (b.points || 0) - (a.points || 0));
       setUsers(list);
     });
@@ -314,7 +316,7 @@ export default function Dashboard() {
           </div>
         )}
         <div style={{textAlign:"center",padding:"12px",color:"#444",fontSize:"12px",marginTop:"32px",display:"flex",alignItems:"center",justifyContent:"center",gap:"12px"}}>
-          <span>v1.5 · Spring Cleaning</span>
+          <span>v2 · Spring Cleaning</span>
           <Link to="/admin" style={{color:"#333",fontSize:"11px",textDecoration:"none",padding:"3px 8px",border:"1px solid #222",borderRadius:6,letterSpacing:"0.02em"}}>⚙️</Link>
         </div>
       </div>

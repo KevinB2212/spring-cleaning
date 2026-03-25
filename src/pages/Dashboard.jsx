@@ -184,26 +184,56 @@ export default function Dashboard() {
         {/* Leaderboard */}
         <h2 className="section-title">Leaderboard</h2>
         <div className="leaderboard">
-          {users.map((u) => {
+          {users.map((u, idx) => {
             const pts = u.points || 0;
             const status = getStatus(pts);
+            const rank = idx + 1;
+            const rankColors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
+            const rankBg = rankColors[rank] || 'rgba(255,255,255,0.1)';
+            const rankText = rank <= 3 ? '#000' : 'rgba(255,255,255,0.6)';
+            const cardBg = rank === 1
+              ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))'
+              : undefined;
             return (
-              <div key={u.id} className="leaderboard-card">
-                <div className="avatar">
+              <div key={u.id} className="leaderboard-card" style={{
+                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                ...(cardBg ? { background: cardBg } : {}),
+              }}>
+                <div style={{
+                  width: 32, height: 32, borderRadius: '50%', background: rankBg,
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: 14, fontWeight: 800, color: rankText, flexShrink: 0,
+                }}>#{rank}</div>
+                <div className="avatar" style={{
+                  width: 48, height: 48, minWidth: 48, minHeight: 48, borderRadius: '50%',
+                  overflow: 'hidden', flexShrink: 0,
+                }}>
                   {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
                 </div>
-                <div className="card-info">
+                <div className="card-info" style={{ flex: 1, minWidth: 0 }}>
                   <span className="card-name">{u.name}</span>
                   <span className="card-status">
                     <span className={`badge badge-${status.variant}`}>
-                      {pts} pt{pts !== 1 ? 's' : ''} — {status.label}
+                      {status.label}
                     </span>
                   </span>
                 </div>
+                <div style={{
+                  fontSize: 24, fontWeight: 800, color: '#fff', flexShrink: 0,
+                }}>{pts}</div>
               </div>
             );
           })}
         </div>
+
+        {/* Accusation CTA */}
+        <Link to="/accuse" style={{
+          display:'block', textAlign:'center', margin:'24px auto',
+          background:'linear-gradient(135deg,#7c3aed,#a855f7)',
+          color:'white', borderRadius:'16px', padding:'18px',
+          fontSize:'18px', fontWeight:'700', maxWidth:'340px',
+          textDecoration:'none', boxShadow:'0 4px 24px rgba(124,58,237,0.4)',
+        }}>🚨 Make an Accusation</Link>
 
         {/* Accusations against me */}
         {againstMe.length > 0 && (
@@ -262,6 +292,9 @@ export default function Dashboard() {
             })}
           </div>
         )}
+        <div style={{textAlign:"center",padding:"12px",color:"#444",fontSize:"12px",marginTop:"32px"}}>
+          v1.0.0 · Spring Cleaning
+        </div>
       </div>
     </div>
   );

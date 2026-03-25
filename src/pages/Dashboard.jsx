@@ -314,7 +314,7 @@ export default function Dashboard() {
           </div>
         )}
         <div style={{textAlign:"center",padding:"12px",color:"#444",fontSize:"12px",marginTop:"32px",display:"flex",alignItems:"center",justifyContent:"center",gap:"12px"}}>
-          <span>v1.0.0 · Spring Cleaning</span>
+          <span>v1.5 · Spring Cleaning</span>
           <Link to="/admin" style={{color:"#333",fontSize:"11px",textDecoration:"none",padding:"3px 8px",border:"1px solid #222",borderRadius:6,letterSpacing:"0.02em"}}>⚙️</Link>
         </div>
       </div>

@@ -1,6 +1,6 @@
 {
   "name": "spring-cleaning",
-  "version": "1.5.0",
+  "version": "2.5.0",
   "description": "Democratic house cleaning accountability app. Post photos, vote on violations, track points. Real-world solution for housemate accountability with proof-based voting.",
   "homepage": "https://kevinb2212.github.io/spring-cleaning",
   "repository": {

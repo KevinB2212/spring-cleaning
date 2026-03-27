@@ -1,7 +1,8 @@
-import { useContext, useEffect, useState } from 'react';
+import { useContext, useEffect, useState, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, increment, addDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { db, storage } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import { SkeletonCard } from '../components/Skeleton';
 import ThemeToggle from '../components/ThemeToggle';
@@ -17,7 +18,10 @@ export default function Dashboard() {
   const [currentVoteIndex, setCurrentVoteIndex] = useState(0);
   const [notices, setNotices] = useState([]);
   const [noticeText, setNoticeText] = useState('');
+  const [noticePhoto, setNoticePhoto] = useState(null);
+  const [noticePreview, setNoticePreview] = useState(null);
   const [submittingNotice, setSubmittingNotice] = useState(false);
+  const noticeFileRef = useRef(null);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
@@ -58,20 +62,62 @@ export default function Dashboard() {
     }
   };
 
+  function compressImage(file, maxWidth = 1200, quality = 0.75) {
+    return new Promise((resolve) => {
+      const img = new window.Image();
+      const url = URL.createObjectURL(file);
+      img.onload = () => {
+        URL.revokeObjectURL(url);
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext('2d').drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => resolve(new File([blob], file.name, { type: 'image/jpeg' })), 'image/jpeg', quality);
+      };
+      img.src = url;
+    });
+  }
+
+  const handleNoticePhoto = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (noticePreview) URL.revokeObjectURL(noticePreview);
+    const compressed = await compressImage(file);
+    setNoticePhoto(compressed);
+    setNoticePreview(URL.createObjectURL(compressed));
+  };
+
+  const clearNoticePhoto = () => {
+    if (noticePreview) URL.revokeObjectURL(noticePreview);
+    setNoticePhoto(null);
+    setNoticePreview(null);
+    if (noticeFileRef.current) noticeFileRef.current.value = '';
+  };
+
   const handleSubmitNotice = async (e) => {
     e.preventDefault();
     const text = noticeText.trim();
-    if (!text) return;
+    if (!text && !noticePhoto) return;
     setSubmittingNotice(true);
     try {
+      let photoUrl = null;
+      if (noticePhoto) {
+        const path = `notices/${Date.now()}_${noticePhoto.name}`;
+        const storageRef = ref(storage, path);
+        await uploadBytes(storageRef, noticePhoto);
+        photoUrl = await getDownloadURL(storageRef);
+      }
       await addDoc(collection(db, 'notices'), {
-        text,
+        text: text || '',
         authorUid: user.uid,
         authorName: firestoreUser?.name || 'Unknown',
         createdAt: serverTimestamp(),
         seenBy: {},
+        ...(photoUrl ? { photoUrl } : {}),
       });
       setNoticeText('');
+      clearNoticePhoto();
     } catch (err) {
       console.error('Failed to submit notice:', err);
     }
@@ -238,16 +284,35 @@ export default function Dashboard() {
         {/* Notice input */}
         <form className="notice-input-form" onSubmit={handleSubmitNotice}>
           <input
-            type="text"
-            className="notice-input"
-            placeholder="Post a notice..."
-            value={noticeText}
-            onChange={(e) => setNoticeText(e.target.value)}
-            maxLength={280}
+            ref={noticeFileRef}
+            type="file"
+            accept="image/*"
+            capture="environment"
+            onChange={handleNoticePhoto}
+            style={{ display: 'none' }}
           />
-          <button type="submit" className="notice-send-btn" disabled={submittingNotice || !noticeText.trim()}>
-            Send
-          </button>
+          {noticePreview && (
+            <div className="notice-preview-wrap">
+              <img src={noticePreview} alt="Preview" className="notice-preview-img" />
+              <button type="button" className="notice-preview-remove" onClick={clearNoticePhoto}>✕</button>
+            </div>
+          )}
+          <div className="notice-input-row">
+            <button type="button" className="notice-photo-btn" onClick={() => noticeFileRef.current?.click()}>
+              📷
+            </button>
+            <input
+              type="text"
+              className="notice-input"
+              placeholder="Post a notice..."
+              value={noticeText}
+              onChange={(e) => setNoticeText(e.target.value)}
+              maxLength={280}
+            />
+            <button type="submit" className="notice-send-btn" disabled={submittingNotice || (!noticeText.trim() && !noticePhoto)}>
+              Send
+            </button>
+          </div>
         </form>
 
         {/* Unseen notices OR leaderboard */}
@@ -256,9 +321,14 @@ export default function Dashboard() {
             <h2 className="section-title">Notices</h2>
             <div className="notices-list">
               {unseenNotices.map((n) => (
-                <div key={n.id} className="notice-card">
+                <div key={n.id} className="notice-card notice-card-with-image">
+                  {n.photoUrl && (
+                    <ImageModal src={n.photoUrl} alt="Notice image">
+                      <img src={n.photoUrl} alt="Notice" loading="lazy" className="notice-thumb" style={{ cursor: 'pointer' }} />
+                    </ImageModal>
+                  )}
                   <div className="notice-content">
-                    <div className="notice-text">{n.text}</div>
+                    {n.text && <div className="notice-text">{n.text}</div>}
                     <div className="notice-meta">{n.authorName}</div>
                   </div>
                   <button className="notice-dismiss" onClick={() => handleDismissNotice(n.id)}>Got it</button>
@@ -403,7 +473,7 @@ export default function Dashboard() {
           </div>
         )}
         <div style={{textAlign:"center",padding:"12px",color:"#444",fontSize:"12px",marginTop:"32px",display:"flex",alignItems:"center",justifyContent:"center",gap:"12px"}}>
-          <span>v2 · Spring Cleaning</span>
+          <span>v2.5 · Spring Cleaning</span>
           <Link to="/admin" style={{color:"#333",fontSize:"11px",textDecoration:"none",padding:"3px 8px",border:"1px solid #222",borderRadius:6,letterSpacing:"0.02em"}}>⚙️</Link>
         </div>
       </div>

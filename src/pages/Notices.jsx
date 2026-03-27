@@ -4,6 +4,7 @@ import { collection, query, orderBy, onSnapshot } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import ThemeToggle from '../components/ThemeToggle';
+import ImageModal from '../components/ImageModal';
 import '../styles/Dashboard.css';
 
 export default function Notices() {
@@ -53,10 +54,17 @@ export default function Notices() {
             {notices.map((n) => {
               const seen = n.seenBy && n.seenBy[user.uid];
               return (
-                <div key={n.id} className={`notice-card${seen ? ' notice-seen' : ''}`}>
-                  <div className="notice-text">{n.text}</div>
-                  <div className="notice-meta">
-                    {n.authorName} · {formatDate(n.createdAt)}
+                <div key={n.id} className={`notice-card notice-card-with-image${seen ? ' notice-seen' : ''}`}>
+                  {n.photoUrl && (
+                    <ImageModal src={n.photoUrl} alt="Notice image">
+                      <img src={n.photoUrl} alt="Notice" loading="lazy" className="notice-thumb" style={{ cursor: 'pointer' }} />
+                    </ImageModal>
+                  )}
+                  <div className="notice-content">
+                    {n.text && <div className="notice-text">{n.text}</div>}
+                    <div className="notice-meta">
+                      {n.authorName} · {formatDate(n.createdAt)}
+                    </div>
                   </div>
                 </div>
               );

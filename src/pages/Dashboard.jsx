@@ -1,6 +1,6 @@
 import { useContext, useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { collection, query, where, onSnapshot, doc, updateDoc, increment } from 'firebase/firestore';
+import { collection, query, where, orderBy, onSnapshot, doc, updateDoc, increment, addDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { AuthContext } from '../contexts/AuthContext';
 import { SkeletonCard } from '../components/Skeleton';
@@ -15,6 +15,9 @@ export default function Dashboard() {
   const [accusations, setAccusations] = useState([]);
   const [showVoteModal, setShowVoteModal] = useState(true);
   const [currentVoteIndex, setCurrentVoteIndex] = useState(0);
+  const [notices, setNotices] = useState([]);
+  const [noticeText, setNoticeText] = useState('');
+  const [submittingNotice, setSubmittingNotice] = useState(false);
 
   useEffect(() => {
     const unsub = onSnapshot(collection(db, 'users'), (snap) => {
@@ -34,6 +37,46 @@ export default function Dashboard() {
     });
     return unsub;
   }, []);
+
+  useEffect(() => {
+    const q = query(collection(db, 'notices'), orderBy('createdAt', 'desc'));
+    const unsub = onSnapshot(q, (snap) => {
+      setNotices(snap.docs.map((d) => ({ id: d.id, ...d.data() })));
+    });
+    return unsub;
+  }, []);
+
+  const unseenNotices = notices.filter((n) => !n.seenBy || !n.seenBy[user.uid]);
+
+  const handleDismissNotice = async (noticeId) => {
+    try {
+      await updateDoc(doc(db, 'notices', noticeId), {
+        [`seenBy.${user.uid}`]: true,
+      });
+    } catch (err) {
+      console.error('Failed to dismiss notice:', err);
+    }
+  };
+
+  const handleSubmitNotice = async (e) => {
+    e.preventDefault();
+    const text = noticeText.trim();
+    if (!text) return;
+    setSubmittingNotice(true);
+    try {
+      await addDoc(collection(db, 'notices'), {
+        text,
+        authorUid: user.uid,
+        authorName: firestoreUser?.name || 'Unknown',
+        createdAt: serverTimestamp(),
+        seenBy: {},
+      });
+      setNoticeText('');
+    } catch (err) {
+      console.error('Failed to submit notice:', err);
+    }
+    setSubmittingNotice(false);
+  };
 
   const handlePunishmentDone = async (uid) => {
     try {
@@ -175,6 +218,7 @@ export default function Dashboard() {
         </span>
         <div className="navbar-links">
           <Link to="/accuse">Accuse</Link>
+          <Link to="/notices">Notices{unseenNotices.length > 0 ? ` (${unseenNotices.length})` : ''}</Link>
           <Link to="/history">History</Link>
           <button onClick={handleLogout} className="btn-link">Logout</button>
         </div>
@@ -191,60 +235,94 @@ export default function Dashboard() {
           </div>
         ))}
 
-        {/* Leaderboard */}
-        <h2 className="section-title">Leaderboard</h2>
-        {users.length === 0 ? (
-          <div className="leaderboard">
-            {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
-          </div>
+        {/* Notice input */}
+        <form className="notice-input-form" onSubmit={handleSubmitNotice}>
+          <input
+            type="text"
+            className="notice-input"
+            placeholder="Post a notice..."
+            value={noticeText}
+            onChange={(e) => setNoticeText(e.target.value)}
+            maxLength={280}
+          />
+          <button type="submit" className="notice-send-btn" disabled={submittingNotice || !noticeText.trim()}>
+            Send
+          </button>
+        </form>
+
+        {/* Unseen notices OR leaderboard */}
+        {unseenNotices.length > 0 ? (
+          <>
+            <h2 className="section-title">Notices</h2>
+            <div className="notices-list">
+              {unseenNotices.map((n) => (
+                <div key={n.id} className="notice-card">
+                  <div className="notice-content">
+                    <div className="notice-text">{n.text}</div>
+                    <div className="notice-meta">{n.authorName}</div>
+                  </div>
+                  <button className="notice-dismiss" onClick={() => handleDismissNotice(n.id)}>Got it</button>
+                </div>
+              ))}
+            </div>
+          </>
         ) : (
-        <div className="leaderboard">
-          {users.map((u, idx) => {
-            const pts = u.points || 0;
-            const status = getStatus(pts, u.punishmentsServed || 0);
-            const rank = idx + 1;
-            const rankColors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
-            const rankBg = rankColors[rank] || 'rgba(255,255,255,0.1)';
-            const rankText = rank <= 3 ? '#000' : 'rgba(255,255,255,0.6)';
-            const cardBg = rank === 1
-              ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))'
-              : undefined;
-            return (
-              <div key={u.id} className="leaderboard-card" style={{
-                display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
-                ...(cardBg ? { background: cardBg } : {}),
-              }}>
-                <div style={{
-                  width: 32, height: 32, borderRadius: '50%', background: rankBg,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: 14, fontWeight: 800, color: rankText, flexShrink: 0,
-                }}>#{rank}</div>
-                <div className="avatar" style={{
-                  width: 48, height: 48, minWidth: 48, minHeight: 48, borderRadius: '50%',
-                  overflow: 'hidden', flexShrink: 0,
-                }}>
-                  {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
-                </div>
-                <div className="card-info" style={{ flex: 1, minWidth: 0 }}>
-                  <span className="card-name">{u.name}</span>
-                  <span className="card-status">
-                    <span style={{
-                      background: (status.color || '#22c55e') + '22',
-                      color: status.color || '#22c55e',
-                      border: `1px solid ${status.color || '#22c55e'}44`,
-                      borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600,
-                    }}>
-                      {status.label}
-                    </span>
-                  </span>
-                </div>
-                <div style={{
-                  fontSize: 24, fontWeight: 800, color: '#fff', flexShrink: 0,
-                }}>{pts}</div>
+          <>
+            <h2 className="section-title">Leaderboard</h2>
+            {users.length === 0 ? (
+              <div className="leaderboard">
+                {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
               </div>
-            );
-          })}
-        </div>
+            ) : (
+            <div className="leaderboard">
+              {users.map((u, idx) => {
+                const pts = u.points || 0;
+                const status = getStatus(pts, u.punishmentsServed || 0);
+                const rank = idx + 1;
+                const rankColors = { 1: '#FFD700', 2: '#C0C0C0', 3: '#CD7F32' };
+                const rankBg = rankColors[rank] || 'rgba(255,255,255,0.1)';
+                const rankText = rank <= 3 ? '#000' : 'rgba(255,255,255,0.6)';
+                const cardBg = rank === 1
+                  ? 'linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,215,0,0.05))'
+                  : undefined;
+                return (
+                  <div key={u.id} className="leaderboard-card" style={{
+                    display: 'flex', alignItems: 'center', gap: 12, padding: '12px 16px',
+                    ...(cardBg ? { background: cardBg } : {}),
+                  }}>
+                    <div style={{
+                      width: 32, height: 32, borderRadius: '50%', background: rankBg,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 14, fontWeight: 800, color: rankText, flexShrink: 0,
+                    }}>#{rank}</div>
+                    <div className="avatar" style={{
+                      width: 48, height: 48, minWidth: 48, minHeight: 48, borderRadius: '50%',
+                      overflow: 'hidden', flexShrink: 0,
+                    }}>
+                      {u.avatar?.startsWith('http') ? <img src={u.avatar} alt={u.name} loading="lazy" style={{width:'100%',height:'100%',objectFit:'cover',borderRadius:'50%'}} /> : (u.name?.[0] || '?')}
+                    </div>
+                    <div className="card-info" style={{ flex: 1, minWidth: 0 }}>
+                      <span className="card-name">{u.name}</span>
+                      <span className="card-status">
+                        <span style={{
+                          background: (status.color || '#22c55e') + '22',
+                          color: status.color || '#22c55e',
+                          border: `1px solid ${status.color || '#22c55e'}44`,
+                          borderRadius: 6, padding: '2px 8px', fontSize: 12, fontWeight: 600,
+                        }}>
+                          {status.label}
+                        </span>
+                      </span>
+                    </div>
+                    <div style={{
+                      fontSize: 24, fontWeight: 800, color: '#fff', flexShrink: 0,
+                    }}>{pts}</div>
+                  </div>
+                );
+              })}
+            </div>
+            )}
+          </>
         )}
 
         {/* Accusation CTA */}
